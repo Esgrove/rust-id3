@@ -650,7 +650,7 @@ pub trait TagLike: private::Sealed {
     /// tag.set_genre("(31)");
     /// assert_eq!(tag.genre_parsed(), Some(Cow::Owned("Trance".to_string())));
     /// ```
-    fn genre_parsed(&self) -> Option<Cow<str>> {
+    fn genre_parsed(&self) -> Option<Cow<'_, str>> {
         let tcon = self.text_for_frame_id("TCON")?;
         Some(crate::tcon::Parser::parse_tcon(tcon))
     }
