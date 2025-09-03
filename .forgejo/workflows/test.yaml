@@ -16,7 +16,7 @@ env:
 jobs:
   cargo-toml-features:
     name: Generate Feature Combinations
-    runs-on: ubuntu-latest
+    runs-on: codeberg-tiny
     outputs:
       feature-combinations: ${{ steps.cargo-toml-features.outputs.feature-combinations }}
     steps:
@@ -24,40 +24,26 @@ jobs:
         uses: actions/checkout@v4
       - name: Determine Cargo Features
         id: cargo-toml-features
-        uses: Holzhaus/cargo-toml-features-action@3afa751aae4071b2d1ca1c5fa42528a351c995f4
+        uses: https://github.com/Holzhaus/cargo-toml-features-action@3afa751aae4071b2d1ca1c5fa42528a351c995f4
 
   build:
     needs: cargo-toml-features
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         features: ${{ fromJson(needs.cargo-toml-features.outputs.feature-combinations) }}
       fail-fast: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: codeberg-tiny
     steps:
-      - name: Check out source repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install FFmpeg (Ubuntu)
-        if: runner.os == 'Linux'
+      - name: Install FFmpeg
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
 
-      - name: Install FFmpeg (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install ffmpeg
-
-      - name: Install FFmpeg (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install ffmpeg
-        shell: powershell
-
       - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: https://github.com/dtolnay/rust-toolchain@stable
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -69,8 +55,8 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-
 
       - name: Build
         run: cargo build --no-default-features --features "${{ join(matrix.features, ',') }}"
@@ -80,22 +66,23 @@ jobs:
 
   msrv:
     name: Current MSRV is 1.70.0
-    runs-on: ubuntu-latest
+    runs-on: codeberg-tiny
     steps:
     - uses: actions/checkout@v4
     # Now check that `cargo build` works with respect to the oldest possible
     # deps and the stated MSRV
-    - uses: dtolnay/rust-toolchain@1.70.0
+    - uses: https://github.com/dtolnay/rust-toolchain@1.70.0
     - run: cargo build --all-features
 
   style:
-    runs-on: ubuntu-latest
+    runs-on: codeberg-tiny
     steps:
-      - name: Check out source repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: https://github.com/dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -107,8 +94,8 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-
 
       - name: Format
         run: cargo fmt --check
@@ -121,7 +108,7 @@ jobs:
 
   conventional-commits:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: codeberg-tiny
     steps:
       - uses: actions/checkout@v4
         with:
