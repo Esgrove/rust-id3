@@ -2,6 +2,7 @@
 name = "id3"
 version = "1.16.3"
 edition = "2021"
+rust-version = "1.70"
 authors = [
     "polyfloyd <floyd@polyfloyd.net>",
 ]
