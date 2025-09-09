@@ -1,0 +1,35 @@
+name: Bump
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: nix develop --command {0}
+
+jobs:
+  bump:
+    runs-on: codeberg-tiny
+    container:
+      image: codeberg.org/polyfloyd/nix-ci:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ssh-key: "${{ secrets.DEPLOY_SSH_KEY }}"
+      - name: Populate /nix/store
+        run: echo done
+
+      - name: Set Git identity
+        run: |-
+          git config --local user.email "forgejo-actions@codeberg.org"
+          git config --local user.name "forgejo-actions"
+
+      - run: cz bump --get-next
+
+      - name: Update Cargo.toml
+        run: sed -i 's/^version =.\+$/version = "$(cz bump --get-next)"/' Cargo.toml
+
+      - run: cz bump --changelog
+      - run: git push
+      - run: git push --tags

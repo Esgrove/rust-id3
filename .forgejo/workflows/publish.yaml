@@ -1,0 +1,14 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  cargo-publish:
+    runs-on: codeberg-tiny
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
