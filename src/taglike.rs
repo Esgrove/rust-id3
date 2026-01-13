@@ -660,6 +660,28 @@ pub trait TagLike: private::Sealed {
         self.text_values_for_frame_id("TCON")
     }
 
+    /// Returns the genre (TCON) with ID3v1 genre indices resolved.
+    ///
+    /// # Example
+    /// ```
+    /// use id3::frame::Content;
+    /// use id3::{Frame, Tag, TagLike};
+    /// use std::borrow::Cow;
+    ///
+    /// let mut tag = Tag::new();
+    /// tag.add_frame(Frame::text("TCON", "genre"));
+    /// assert_eq!(tag.genres_parsed(), vec!["genre"]);
+    /// tag.add_frame(Frame::text("TCON", "21\x00Eurodance"));
+    /// assert_eq!(tag.genres_parsed(), vec!["Ska", "Eurodance"]);
+    /// ```
+    fn genres_parsed(&self) -> Vec<Cow<'_, str>> {
+        self.text_values_for_frame_id("TCON")
+            .unwrap_or_default()
+            .into_iter()
+            .map(crate::tcon::Parser::parse_tcon)
+            .collect()
+    }
+
     /// Sets the plain genre (TCON).
     ///
     /// No attempt is made to interpret and convert ID3v1 indices.

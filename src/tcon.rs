@@ -21,7 +21,11 @@ impl<'a> Parser<'a> {
     }
 
     fn content_type(&mut self) -> Result<String, ()> {
-        self.first_of([&Self::escaped_content_type, &Self::v1_content_type])
+        self.first_of([
+            &Self::id3v24_numeric_field,
+            &Self::escaped_content_type,
+            &Self::v1_content_type,
+        ])
     }
 
     fn v1_content_type(&mut self) -> Result<String, ()> {
@@ -46,6 +50,17 @@ impl<'a> Parser<'a> {
         let t = format!("({}", self.0);
         self.0 = "";
         Ok(t)
+    }
+
+    fn id3v24_numeric_field(&mut self) -> Result<String, ()> {
+        let index: u8 = self.0.parse().map_err(|_| ())?;
+        match GENRE_LIST.get(index as usize) {
+            Some(v1_genre) => {
+                self.0 = "";
+                Ok(v1_genre.to_string())
+            }
+            None => Err(()),
+        }
     }
 
     fn trailer(&mut self) -> Result<String, ()> {
@@ -159,5 +174,13 @@ mod tests {
         assert_eq!(s, "(RXlol)");
         let s = Parser::parse_tcon("(CRlol)");
         assert_eq!(s, "(CRlol)");
+    }
+
+    #[test]
+    fn codeberg_issue_159() {
+        let s = Parser::parse_tcon("31");
+        assert_eq!(s, "Trance");
+        let s = Parser::parse_tcon("31bla");
+        assert_eq!(s, "31bla");
     }
 }
