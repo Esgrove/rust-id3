@@ -1,3 +1,9 @@
+## v1.16.4 (2026-01-14)
+
+### Fix
+
+- Support unenclosed dnumeric genre fields from ID3v2.4
+
 ## v1.16.3 (2025-06-04)
 
 ### Fix
