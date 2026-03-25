@@ -1,0 +1,17 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+
+  cargo-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - run: cargo publish --token ${CRATES_TOKEN}
+      env:
+        CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
