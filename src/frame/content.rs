@@ -844,13 +844,13 @@ pub struct UniqueFileIdentifier {
 
 impl fmt::Display for UniqueFileIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}: {}",
-            self.owner_identifier,
-            String::from_utf8(self.identifier.clone())
-                .unwrap_or(format!("{:x?}", &self.identifier))
-        )
+        let id = String::from_utf8(self.identifier.clone())
+            .unwrap_or(format!("{:x?}", &self.identifier));
+        if self.owner_identifier.is_empty() {
+            write!(f, "{id}")
+        } else {
+            write!(f, "{}: {id}", self.owner_identifier)
+        }
     }
 }
 
