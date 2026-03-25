@@ -18,6 +18,7 @@ include = ["src/*", "Cargo.toml", "LICENSE", "README.md"]
 bitflags = "2.0"
 byteorder = "1.4"
 flate2 = "1"
+thiserror = "2"
 tokio = { version = "1.21", default-features = false, features = ["rt", "macros", "io-util", "fs"], optional = true}
 
 [dev-dependencies]

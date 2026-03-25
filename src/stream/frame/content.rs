@@ -7,7 +7,7 @@ use crate::frame::{
 use crate::stream::encoding::Encoding;
 use crate::stream::frame;
 use crate::tag::Version;
-use crate::{Error, ErrorKind};
+use crate::{Error, ErrorKind, FrameError, FrameErrorKind};
 use std::convert::{TryFrom, TryInto};
 use std::io;
 use std::iter;
@@ -501,10 +501,11 @@ impl<'a> Decoder<'a> {
     fn string_delimited(&mut self, encoding: Encoding, field: &str) -> crate::Result<String> {
         let delim = find_delim(encoding, self.r, 0).ok_or_else(|| {
             let preview_len = self.r.len().min(64);
-            let hex_preview: Vec<String> = self.r[..preview_len]
+            let hex_preview = self.r[..preview_len]
                 .iter()
                 .map(|b| format!("{:02x}", b))
-                .collect();
+                .collect::<Vec<_>>()
+                .join(" ");
             let ascii_preview: String = self.r[..preview_len]
                 .iter()
                 .map(|&b| {
@@ -515,20 +516,16 @@ impl<'a> Decoder<'a> {
                     }
                 })
                 .collect();
-            Error::new(
-                ErrorKind::Parsing,
-                format!(
-                    "delimiter not found in frame '{}' field '{}' \
-                     (encoding={:?}, remaining_bytes={}, \
-                     hex=[{}], ascii=[{}])",
-                    self.id,
-                    field,
+            Error::frame_parsing(FrameError {
+                frame_id: self.id.to_string(),
+                field: field.to_string(),
+                kind: FrameErrorKind::DelimiterNotFound {
                     encoding,
-                    self.r.len(),
-                    hex_preview.join(" "),
+                    remaining_bytes: self.r.len(),
+                    hex_preview,
                     ascii_preview,
-                ),
-            )
+                },
+            })
         })?;
         let delim_len = delim_len(encoding);
         let b = self.bytes(delim)?;
