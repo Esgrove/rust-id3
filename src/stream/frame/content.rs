@@ -392,6 +392,7 @@ pub fn decode(
     let decoder = Decoder {
         r: &mut data,
         version,
+        id,
     };
 
     let mut encoding = None;
@@ -454,6 +455,7 @@ pub fn decode(
 struct Decoder<'a> {
     r: &'a [u8],
     version: Version,
+    id: &'a str,
 }
 
 impl<'a> Decoder<'a> {
@@ -496,9 +498,38 @@ impl<'a> Decoder<'a> {
         encoding.decode(self.r)
     }
 
-    fn string_delimited(&mut self, encoding: Encoding) -> crate::Result<String> {
-        let delim = find_delim(encoding, self.r, 0)
-            .ok_or_else(|| Error::new(ErrorKind::Parsing, "delimiter not found"))?;
+    fn string_delimited(&mut self, encoding: Encoding, field: &str) -> crate::Result<String> {
+        let delim = find_delim(encoding, self.r, 0).ok_or_else(|| {
+            let preview_len = self.r.len().min(64);
+            let hex_preview: Vec<String> = self.r[..preview_len]
+                .iter()
+                .map(|b| format!("{:02x}", b))
+                .collect();
+            let ascii_preview: String = self.r[..preview_len]
+                .iter()
+                .map(|&b| {
+                    if b.is_ascii_graphic() || b == b' ' {
+                        b as char
+                    } else {
+                        '.'
+                    }
+                })
+                .collect();
+            Error::new(
+                ErrorKind::Parsing,
+                format!(
+                    "delimiter not found in frame '{}' field '{}' \
+                     (encoding={:?}, remaining_bytes={}, \
+                     hex=[{}], ascii=[{}])",
+                    self.id,
+                    field,
+                    encoding,
+                    self.r.len(),
+                    hex_preview.join(" "),
+                    ascii_preview,
+                ),
+            )
+        })?;
         let delim_len = delim_len(encoding);
         let b = self.bytes(delim)?;
         self.bytes(delim_len)?; // Skip.
@@ -664,7 +695,7 @@ impl<'a> Decoder<'a> {
             }
         };
         let picture_type = self.picture_type()?;
-        let description = self.string_delimited(encoding)?;
+        let description = self.string_delimited(encoding, "description")?;
         let data = self.r.to_vec();
         Ok(Content::Picture(Picture {
             mime_type,
@@ -676,9 +707,9 @@ impl<'a> Decoder<'a> {
 
     fn picture_content_v3(mut self) -> crate::Result<Content> {
         let encoding = self.encoding()?;
-        let mime_type = self.string_delimited(Encoding::Latin1)?;
+        let mime_type = self.string_delimited(Encoding::Latin1, "mime_type")?;
         let picture_type = self.picture_type()?;
-        let description = self.string_delimited(encoding)?;
+        let description = self.string_delimited(encoding, "description")?;
         let data = self.r.to_vec();
         Ok(Content::Picture(Picture {
             mime_type,
@@ -691,7 +722,7 @@ impl<'a> Decoder<'a> {
     fn comment_content(mut self) -> crate::Result<Content> {
         let encoding = self.encoding()?;
         let lang = self.string_fixed(3)?;
-        let description = self.string_delimited(encoding)?;
+        let description = self.string_delimited(encoding, "description")?;
         let text = self.string_until_eof(encoding)?;
         Ok(Content::Comment(Comment {
             lang,
@@ -701,7 +732,7 @@ impl<'a> Decoder<'a> {
     }
 
     fn popularimeter_content(mut self) -> crate::Result<Content> {
-        let user = self.string_delimited(Encoding::Latin1)?;
+        let user = self.string_delimited(Encoding::Latin1, "user")?;
         let rating = self.byte()?;
         let counter = {
             let r = match self.r.len() {
@@ -724,7 +755,7 @@ impl<'a> Decoder<'a> {
 
     fn extended_text_content(mut self) -> crate::Result<(Content, Encoding)> {
         let encoding = self.encoding()?;
-        let description = self.string_delimited(encoding)?;
+        let description = self.string_delimited(encoding, "description")?;
         let value = self.string_until_eof(encoding)?;
         Ok((
             Content::ExtendedText(ExtendedText { description, value }),
@@ -734,16 +765,16 @@ impl<'a> Decoder<'a> {
 
     fn extended_link_content(mut self) -> crate::Result<Content> {
         let encoding = self.encoding()?;
-        let description = self.string_delimited(encoding)?;
+        let description = self.string_delimited(encoding, "description")?;
         let link = self.string_until_eof(Encoding::Latin1)?;
         Ok(Content::ExtendedLink(ExtendedLink { description, link }))
     }
 
     fn encapsulated_object_content(mut self) -> crate::Result<(Content, Encoding)> {
         let encoding = self.encoding()?;
-        let mime_type = self.string_delimited(Encoding::Latin1)?;
-        let filename = self.string_delimited(encoding)?;
-        let description = self.string_delimited(encoding)?;
+        let mime_type = self.string_delimited(Encoding::Latin1, "mime_type")?;
+        let filename = self.string_delimited(encoding, "filename")?;
+        let description = self.string_delimited(encoding, "description")?;
         let data = self.r.to_vec();
         Ok((
             Content::EncapsulatedObject(EncapsulatedObject {
@@ -759,7 +790,7 @@ impl<'a> Decoder<'a> {
     fn lyrics_content(mut self) -> crate::Result<Content> {
         let encoding = self.encoding()?;
         let lang = self.string_fixed(3)?;
-        let description = self.string_delimited(encoding)?;
+        let description = self.string_delimited(encoding, "description")?;
         let text = self.string_until_eof(encoding)?;
         Ok(Content::Lyrics(Lyrics {
             lang,
@@ -829,7 +860,7 @@ impl<'a> Decoder<'a> {
     }
 
     fn chapter_content(mut self) -> crate::Result<Content> {
-        let element_id = self.string_delimited(Encoding::Latin1)?;
+        let element_id = self.string_delimited(Encoding::Latin1, "element_id")?;
         let start_time = self.uint32()?;
         let end_time = self.uint32()?;
         let start_offset = self.uint32()?;
@@ -927,7 +958,7 @@ impl<'a> Decoder<'a> {
     }
 
     fn private_content(mut self) -> crate::Result<Content> {
-        let owner_identifier = self.string_delimited(Encoding::Latin1)?;
+        let owner_identifier = self.string_delimited(Encoding::Latin1, "owner_identifier")?;
         let private_data = self.r.to_vec();
 
         Ok(Content::Private(Private {
@@ -937,7 +968,7 @@ impl<'a> Decoder<'a> {
     }
 
     fn unique_file_identifier_content(mut self) -> crate::Result<Content> {
-        let owner_identifier = self.string_delimited(Encoding::Latin1)?;
+        let owner_identifier = self.string_delimited(Encoding::Latin1, "owner_identifier")?;
         let identifier = self.r.to_vec();
 
         Ok(Content::UniqueFileIdentifier(UniqueFileIdentifier {
@@ -947,14 +978,14 @@ impl<'a> Decoder<'a> {
     }
 
     fn table_of_contents_content(mut self) -> crate::Result<Content> {
-        let element_id = self.string_delimited(Encoding::Latin1)?;
+        let element_id = self.string_delimited(Encoding::Latin1, "element_id")?;
         let flags = self.byte()?;
         let top_level = matches!(!!(flags & 2), 2);
         let ordered = matches!(!!(flags & 1), 1);
         let element_count = self.byte()?;
         let mut elements = Vec::new();
         for _ in 0..element_count {
-            elements.push(self.string_delimited(Encoding::Latin1)?);
+            elements.push(self.string_delimited(Encoding::Latin1, "element")?);
         }
         let mut frames = Vec::new();
         while let Some((_advance, frame)) = frame::decode(&mut self.r, self.version)? {
