@@ -7,15 +7,15 @@ use std::io;
 /// Returns the synchsafe variant of a `u32` value.
 pub fn encode_u32(n: u32) -> u32 {
     assert!(n < 0x1000_0000);
-    let mut x: u32 = n & 0x7F | (n & 0xFFFF_FF80) << 1;
-    x = x & 0x7FFF | (x & 0xFFFF_8000) << 1;
-    x = x & 0x7F_FFFF | (x & 0xFF80_0000) << 1;
+    let mut x: u32 = n & 0x7F | ((n & 0xFFFF_FF80) << 1);
+    x = x & 0x7FFF | ((x & 0xFFFF_8000) << 1);
+    x = x & 0x7F_FFFF | ((x & 0xFF80_0000) << 1);
     x
 }
 
 /// Returns the unsynchsafe varaiant of a `u32` value.
 pub fn decode_u32(n: u32) -> u32 {
-    n & 0xFF | (n & 0xFF00) >> 1 | (n & 0xFF_0000) >> 2 | (n & 0xFF00_0000) >> 3
+    n & 0xFF | ((n & 0xFF00) >> 1) | ((n & 0xFF_0000) >> 2) | ((n & 0xFF00_0000) >> 3)
 }
 
 /// Decoder for an unsynchronized stream of bytes.
