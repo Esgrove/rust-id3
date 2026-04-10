@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: codeberg-tiny
+    runs-on: codeberg-small
     container:
       image: codeberg.org/polyfloyd/nix-ci:latest
     steps:
