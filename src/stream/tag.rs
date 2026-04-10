@@ -1,5 +1,5 @@
 use crate::chunk;
-use crate::storage::{plain::PlainStorage, Format, Storage, StorageFile};
+use crate::storage::{Format, Storage, StorageFile, plain::PlainStorage};
 use crate::stream::{frame, unsynch};
 use crate::tag::{Tag, Version};
 use crate::taglike::TagLike;

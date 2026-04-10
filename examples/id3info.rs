@@ -1,12 +1,12 @@
 //! Read an ID3 tag from a file and print frame information to the command line.
 
 use id3::{
+    Content, Tag,
     frame::{
         Chapter, Comment, EncapsulatedObject, ExtendedLink, ExtendedText, InvolvedPeopleList,
         InvolvedPeopleListItem, Lyrics, Picture, Popularimeter, SynchronisedLyrics,
         UniqueFileIdentifier,
     },
-    Content, Tag,
 };
 use std::env::args;
 use std::error::Error;
@@ -75,7 +75,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 data,
             }) => {
                 let size = data.len();
-                println!("{id}:{picture_type}=<image, {mime_type}, description {description:?}, {size} bytes>");
+                println!(
+                    "{id}:{picture_type}=<image, {mime_type}, description {description:?}, {size} bytes>"
+                );
             }
             Content::EncapsulatedObject(EncapsulatedObject {
                 mime_type,
@@ -84,7 +86,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 data,
             }) => {
                 let size = data.len();
-                println!("{id}:{description}=<encapsulated object, {mime_type}, filename {filename:?}, {size} bytes>");
+                println!(
+                    "{id}:{description}=<encapsulated object, {mime_type}, filename {filename:?}, {size} bytes>"
+                );
             }
             Content::Chapter(Chapter {
                 element_id,
@@ -95,7 +99,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 frames,
             }) => {
                 let chapter_frame_count = frames.len();
-                println!("{id}:{element_id}=<chapter, {chapter_frame_count} frames ({start_offset}+{start_time} - {end_offset}+{end_time}>");
+                println!(
+                    "{id}:{element_id}=<chapter, {chapter_frame_count} frames ({start_offset}+{start_time} - {end_offset}+{end_time}>"
+                );
             }
             Content::UniqueFileIdentifier(UniqueFileIdentifier {
                 owner_identifier,

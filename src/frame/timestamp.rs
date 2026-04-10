@@ -137,11 +137,7 @@ impl Parser<'_> {
             };
             self.0 = &self.0[1..];
         }
-        if ok {
-            Ok(r)
-        } else {
-            Err(())
-        }
+        if ok { Ok(r) } else { Err(()) }
     }
 }
 

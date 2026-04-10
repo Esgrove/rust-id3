@@ -113,7 +113,9 @@ impl Frame {
                 };
                 Err(Error::new(
                     ErrorKind::InvalidInput,
-                    format!("Frame with ID {id} and content type {content_kind} can not be written as valid ID3"),
+                    format!(
+                        "Frame with ID {id} and content type {content_kind} can not be written as valid ID3"
+                    ),
                 ))
             }
         }

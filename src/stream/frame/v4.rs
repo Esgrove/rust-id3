@@ -5,8 +5,8 @@ use crate::tag::Version;
 use crate::{Error, ErrorKind};
 use bitflags::bitflags;
 use byteorder::{BigEndian, ByteOrder, ReadBytesExt, WriteBytesExt};
-use flate2::write::ZlibEncoder;
 use flate2::Compression;
+use flate2::write::ZlibEncoder;
 use std::io;
 
 bitflags! {

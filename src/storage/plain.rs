@@ -257,18 +257,22 @@ mod tests {
             &store.file.get_ref()[store.region.end as usize..]
         );
         assert_eq!(32, store.reader().unwrap().bytes().count());
-        assert!(store
-            .reader()
-            .unwrap()
-            .bytes()
-            .take(32)
-            .all(|b| b.unwrap() == 0xff));
-        assert!(store
-            .reader()
-            .unwrap()
-            .bytes()
-            .skip(32)
-            .all(|b| b.unwrap() == 0x00));
+        assert!(
+            store
+                .reader()
+                .unwrap()
+                .bytes()
+                .take(32)
+                .all(|b| b.unwrap() == 0xff)
+        );
+        assert!(
+            store
+                .reader()
+                .unwrap()
+                .bytes()
+                .skip(32)
+                .all(|b| b.unwrap() == 0x00)
+        );
     }
 
     #[test]
@@ -310,18 +314,22 @@ mod tests {
         assert!(buf_reference[..2_000] == store.file.get_ref()[..store.region.start as usize]);
         assert!(buf_reference[22_000..] == store.file.get_ref()[store.region.end as usize..]);
         assert_eq!(40_000, store.reader().unwrap().bytes().count());
-        assert!(store
-            .reader()
-            .unwrap()
-            .bytes()
-            .take(40_000)
-            .all(|b| b.unwrap() == 0xff));
-        assert!(store
-            .reader()
-            .unwrap()
-            .bytes()
-            .skip(40_000)
-            .all(|b| b.unwrap() == 0x00));
+        assert!(
+            store
+                .reader()
+                .unwrap()
+                .bytes()
+                .take(40_000)
+                .all(|b| b.unwrap() == 0xff)
+        );
+        assert!(
+            store
+                .reader()
+                .unwrap()
+                .bytes()
+                .skip(40_000)
+                .all(|b| b.unwrap() == 0x00)
+        );
     }
 
     #[test]
@@ -353,17 +361,21 @@ mod tests {
         assert_eq!(29_000, store.file.get_ref().len());
         assert!(buf_reference[22_000..] == store.file.get_ref()[store.region.end as usize..]);
         assert_eq!(9_000, store.reader().unwrap().bytes().count());
-        assert!(store
-            .reader()
-            .unwrap()
-            .bytes()
-            .take(9_000)
-            .all(|b| b.unwrap() == 0xff));
-        assert!(store
-            .reader()
-            .unwrap()
-            .bytes()
-            .skip(9_000)
-            .all(|b| b.unwrap() == 0x00));
+        assert!(
+            store
+                .reader()
+                .unwrap()
+                .bytes()
+                .take(9_000)
+                .all(|b| b.unwrap() == 0xff)
+        );
+        assert!(
+            store
+                .reader()
+                .unwrap()
+                .bytes()
+                .skip(9_000)
+                .all(|b| b.unwrap() == 0x00)
+        );
     }
 }

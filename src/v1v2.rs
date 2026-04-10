@@ -1,4 +1,4 @@
-use crate::{v1, Error, ErrorKind, StorageFile, Tag, Version};
+use crate::{Error, ErrorKind, StorageFile, Tag, Version, v1};
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -105,7 +105,7 @@ mod tests {
     use super::*;
     use crate::TagLike;
     use std::fs::File;
-    use std::io::{copy, Write};
+    use std::io::{Write, copy};
 
     fn file_with_both_formats() -> tempfile::NamedTempFile {
         // Write both ID3v1 and ID3v2 tags to a single file, the ID3v2 should be prefered when

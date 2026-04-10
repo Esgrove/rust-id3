@@ -1,13 +1,13 @@
+use crate::StorageFile;
 use crate::chunk;
 use crate::frame::{
     Chapter, Comment, EncapsulatedObject, ExtendedLink, ExtendedText, Frame, InvolvedPeopleList,
     Lyrics, Picture, SynchronisedLyrics, TableOfContents, UniqueFileIdentifier,
 };
-use crate::storage::{plain::PlainStorage, Format, Storage};
+use crate::storage::{Format, Storage, plain::PlainStorage};
 use crate::stream;
 use crate::taglike::TagLike;
 use crate::v1;
-use crate::StorageFile;
 use crate::{Error, ErrorKind};
 use std::fmt;
 use std::fs::{self, File};

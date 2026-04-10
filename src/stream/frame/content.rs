@@ -660,7 +660,7 @@ impl<'a> Decoder<'a> {
                 return Err(Error::new(
                     ErrorKind::UnsupportedFeature,
                     "can't determine MIME type for image format",
-                ))
+                ));
             }
         };
         let picture_type = self.picture_type()?;
@@ -783,7 +783,7 @@ impl<'a> Decoder<'a> {
                 return Err(Error::new(
                     ErrorKind::Parsing,
                     "invalid SYLT timestamp format",
-                ))
+                ));
             }
         };
         let content_type = match self.byte()? {
@@ -1853,12 +1853,14 @@ mod tests {
             .unwrap(),
             4
         );
-        assert!(find_delim(
-            Encoding::UTF16,
-            &[0x0, 0xFF, 0x0, 0xFF, 0x0, 0xFF, 0xFF, 0xFF],
-            2
-        )
-        .is_none());
+        assert!(
+            find_delim(
+                Encoding::UTF16,
+                &[0x0, 0xFF, 0x0, 0xFF, 0x0, 0xFF, 0xFF, 0xFF],
+                2
+            )
+            .is_none()
+        );
 
         assert_eq!(
             find_delim(
@@ -1869,12 +1871,14 @@ mod tests {
             .unwrap(),
             4
         );
-        assert!(find_delim(
-            Encoding::UTF16BE,
-            &[0x0, 0xFF, 0x0, 0xFF, 0x0, 0xFF, 0xFF, 0xFF],
-            2
-        )
-        .is_none());
+        assert!(
+            find_delim(
+                Encoding::UTF16BE,
+                &[0x0, 0xFF, 0x0, 0xFF, 0x0, 0xFF, 0xFF, 0xFF],
+                2
+            )
+            .is_none()
+        );
     }
 
     #[test]

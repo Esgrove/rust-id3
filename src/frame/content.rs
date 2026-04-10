@@ -1,5 +1,5 @@
-use crate::frame::content_cmp::ContentCmp::{Comparable, Incomparable, Same};
 use crate::frame::Frame;
+use crate::frame::content_cmp::ContentCmp::{Comparable, Incomparable, Same};
 use crate::stream::encoding::Encoding;
 use crate::tag::Version;
 use crate::taglike::TagLike;
