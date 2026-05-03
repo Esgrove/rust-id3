@@ -20,6 +20,7 @@
             ffmpeg
             gcc
             rust-analyzer
+            rustc
             rustfmt
             nixpkgs-cz.legacyPackages.${system}.commitizen
           ];
