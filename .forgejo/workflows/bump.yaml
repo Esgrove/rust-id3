@@ -28,7 +28,7 @@ jobs:
       - run: cz bump --get-next
 
       - name: Update Cargo.toml
-        run: sed -i 's/^version =.\+$/version = "$(cz bump --get-next)"/' Cargo.toml
+        run: sed -i 's/^version =.\+$/version = "'$(cz bump --get-next)'"/' Cargo.toml
 
       - run: cz bump --changelog
       - run: git push
