@@ -8,8 +8,12 @@ use std::io;
 
 pub fn decode(mut reader: impl io::Read) -> crate::Result<Option<(usize, Frame)>> {
     let mut frame_header = [0; 6];
-    let nread = reader.read(&mut frame_header)?;
-    if nread < frame_header.len() || frame_header[0] == 0x00 {
+    match reader.read_exact(&mut frame_header) {
+        Ok(()) => {}
+        Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
+        Err(e) => return Err(e.into()),
+    }
+    if frame_header[0] == 0x00 {
         return Ok(None);
     }
     let id = frame::str_from_utf8(&frame_header[0..3])?;
