@@ -1,3 +1,13 @@
+## v1.17.0 (2026-05-27)
+
+### Feat
+
+- Bump MSRV to v1.85
+
+### Fix
+
+- Potential short read in frame header decoding (fixes #160)
+
 ## v1.16.4 (2026-01-14)
 
 ### Fix
