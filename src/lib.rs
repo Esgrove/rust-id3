@@ -8,7 +8,7 @@
 // * ID3v2.4 <http://id3.org/id3v2.4.0-structure>
 
 pub use crate::error::{
-    no_tag_ok, partial_tag_ok, Error, ErrorKind, FrameError, FrameErrorKind, Result,
+    Error, ErrorKind, FrameError, FrameErrorKind, Result, no_tag_ok, partial_tag_ok,
 };
 pub use crate::frame::{Content, Frame, Timestamp};
 pub use crate::storage::StorageFile;

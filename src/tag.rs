@@ -456,7 +456,7 @@ impl<'a> Tag {
     /// });
     /// assert_eq!(2, tag.chapters().count());
     /// ```
-    pub fn chapters(&self) -> impl Iterator<Item = &Chapter> {
+    pub fn chapters(&self) -> impl Iterator<Item = &Chapter> + use<'_> {
         self.frames().filter_map(|frame| frame.content().chapter())
     }
 
@@ -492,7 +492,7 @@ impl<'a> Tag {
     /// });
     /// assert_eq!(2, tag.tables_of_contents().count());
     /// ```
-    pub fn tables_of_contents(&self) -> impl Iterator<Item = &TableOfContents> {
+    pub fn tables_of_contents(&self) -> impl Iterator<Item = &TableOfContents> + use<'_> {
         self.frames()
             .filter_map(|frame| frame.content().table_of_contents())
     }
@@ -581,7 +581,7 @@ impl<'a> Tag {
     /// assert_eq!(6, tag.involved_people_lists().flat_map(|list| list.items.iter()).count());
     ///
     /// ```
-    pub fn involved_people_lists(&self) -> impl Iterator<Item = &InvolvedPeopleList> {
+    pub fn involved_people_lists(&self) -> impl Iterator<Item = &InvolvedPeopleList> + use<'_> {
         self.frames()
             .filter_map(|frame| frame.content().involved_people_list())
     }
