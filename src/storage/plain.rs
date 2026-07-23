@@ -202,14 +202,12 @@ impl<F: StorageFile> Drop for PlainWriter<'_, F> {
 mod tests {
     use super::*;
     use std::io::{Read, Seek};
-    use std::iter;
 
     #[test]
     fn plain_reader_range() {
-        let buf: Vec<u8> = iter::repeat(0xff)
-            .take(128)
-            .chain(iter::repeat(0x00).take(128))
-            .chain(iter::repeat(0xff).take(128))
+        let buf: Vec<u8> = std::iter::repeat_n(0xff, 128)
+            .chain(std::iter::repeat_n(0x00, 128))
+            .chain(std::iter::repeat_n(0xff, 128))
             .collect();
         let mut store = PlainStorage::new(io::Cursor::new(buf), 128..256);
         assert_eq!(128, store.reader().unwrap().bytes().count());

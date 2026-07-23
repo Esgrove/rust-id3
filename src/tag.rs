@@ -673,10 +673,7 @@ mod tests {
                 _ => err,
             })?;
         if !output.status.success() {
-            return Err(Box::new(io::Error::new(
-                io::ErrorKind::Other,
-                "ffprobe output status failure",
-            )));
+            return Err(Box::new(io::Error::other("ffprobe output status failure")));
         }
         Ok(String::from_utf8(output.stderr)?)
     }
