@@ -177,7 +177,7 @@ impl<'a> Tag {
     #[cfg(feature = "tokio")]
     pub async fn async_read_from(
         reader: impl tokio::io::AsyncRead + std::marker::Unpin,
-    ) -> crate::Result<Tag> {
+    ) -> crate::Result<Self> {
         stream::tag::async_decode(reader).await
     }
 
@@ -188,7 +188,7 @@ impl<'a> Tag {
 
     /// Attempts to read an ID3 tag via Tokio from the file at the indicated path.
     #[cfg(feature = "tokio")]
-    pub async fn async_read_from_path(path: impl AsRef<Path>) -> crate::Result<Tag> {
+    pub async fn async_read_from_path(path: impl AsRef<Path>) -> crate::Result<Self> {
         let file = tokio::io::BufReader::new(tokio::fs::File::open(path).await?);
         stream::tag::async_decode(file).await
     }

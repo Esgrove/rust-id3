@@ -65,7 +65,7 @@ pub fn decode(mut reader: impl io::Read) -> crate::Result<Option<(usize, Frame)>
     Ok(Some((10 + content_size, frame)))
 }
 
-pub fn encode(mut writer: impl io::Write, frame: &Frame, flags: Flags) -> crate::Result<usize> {
+pub fn encode(mut writer: impl io::Write, frame: &Frame, flags: &Flags) -> crate::Result<usize> {
     let (mut content_buf, comp_hint_delta, decompressed_size) =
         if flags.contains(Flags::COMPRESSION) {
             let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
@@ -131,7 +131,7 @@ mod tests {
         let flags = Flags::empty();
         let mut writer = Cursor::new(Vec::new());
 
-        let result = encode(&mut writer, &frame, flags);
+        let result = encode(&mut writer, &frame, &flags);
 
         assert!(result.is_err());
         if let Err(e) = result {

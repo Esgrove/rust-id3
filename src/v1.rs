@@ -214,6 +214,22 @@ impl Tag {
 
     /// Seeks to and reads a ID3v1 tag from the reader.
     pub fn read_from(mut reader: impl io::Read + io::Seek) -> crate::Result<Self> {
+        // Decodes a string consisting out of a base and possible extension to a String.
+        // The input are one or two null-terminated ISO-8859-1 byte slices.
+        fn decode_str(base: &[u8], ext: Option<&[u8]>) -> String {
+            base.iter()
+                .take_while(|c| **c != 0)
+                .chain({
+                    ext.into_iter()
+                        .flat_map(|s| s.iter())
+                        .take_while(|c| **c != 0)
+                })
+                // This works because the ISO 8859-1 code points match the unicode code
+                // points. So,`c as char` will map correctly from ISO to unicode.
+                .map(|c| *c as char)
+                .collect()
+        }
+
         let mut tag_buf = [0; 355];
         let file_len = reader.seek(io::SeekFrom::End(0))?;
         if file_len >= XTAG_CHUNK.start.unsigned_abs() {
@@ -245,21 +261,6 @@ impl Tag {
             )
         };
 
-        // Decodes a string consisting out of a base and possible extension to a String.
-        // The input are one or two null-terminated ISO-8859-1 byte slices.
-        fn decode_str(base: &[u8], ext: Option<&[u8]>) -> String {
-            base.iter()
-                .take_while(|c| **c != 0)
-                .chain({
-                    ext.into_iter()
-                        .flat_map(|s| s.iter())
-                        .take_while(|c| **c != 0)
-                })
-                // This works because the ISO 8859-1 code points match the unicode code
-                // points. So,`c as char` will map correctly from ISO to unicode.
-                .map(|c| *c as char)
-                .collect()
-        }
         let title = decode_str(&tag[3..33], xtag.as_ref().map(|t| &t[4..64]));
         let artist = decode_str(&tag[33..63], xtag.as_ref().map(|t| &t[64..124]));
         let album = decode_str(&tag[63..93], xtag.as_ref().map(|t| &t[124..184]));
@@ -271,15 +272,14 @@ impl Tag {
         };
         let comment = decode_str(comment_raw, None);
         let genre_id = tag[127];
-        let (speed, genre_str, start_time, end_time) = if let Some(xt) = xtag {
-            let speed = if xt[184] == 0 { None } else { Some(xt[184]) };
-            let genre_str = decode_str(&xt[185..215], None);
-            let start_time = decode_str(&xt[185..215], None);
-            let end_time = decode_str(&xt[185..215], None);
-            (speed, Some(genre_str), Some(start_time), Some(end_time))
-        } else {
-            (None, None, None, None)
-        };
+        let (speed, genre_str, start_time, end_time) =
+            xtag.map_or((None, None, None, None), |xt| {
+                let speed = if xt[184] == 0 { None } else { Some(xt[184]) };
+                let genre_str = decode_str(&xt[185..215], None);
+                let start_time = decode_str(&xt[185..215], None);
+                let end_time = decode_str(&xt[185..215], None);
+                (speed, Some(genre_str), Some(start_time), Some(end_time))
+            });
 
         Ok(Self {
             title,

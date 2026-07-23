@@ -515,8 +515,8 @@ pub struct SynchronisedLyrics {
     pub content: Vec<(u32, String)>,
 }
 
-const MILLISECONDS_PER_HOUR: u32 = 3600000;
-const MILLISECONDS_PER_MINUTE: u32 = 60000;
+const MILLISECONDS_PER_HOUR: u32 = 3_600_000;
+const MILLISECONDS_PER_MINUTE: u32 = 60_000;
 const MILLISECONDS_PER_SECOND: u32 = 1000;
 
 impl SynchronisedLyrics {
@@ -754,7 +754,7 @@ pub struct Chapter {
 impl fmt::Display for Chapter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (start, end, unit) = match (self.start_offset, self.end_offset) {
-            (0xffffffff, 0xffffffff) => (self.start_time, self.end_time, "ms"),
+            (0xffff_ffff, 0xffff_ffff) => (self.start_time, self.end_time, "ms"),
             (_, _) => (self.start_offset, self.end_offset, "b"),
         };
         let frames: Vec<&str> = self.frames.iter().map(super::Frame::id).collect();
@@ -861,8 +861,8 @@ pub struct UniqueFileIdentifier {
 
 impl fmt::Display for UniqueFileIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let id =
-            String::from_utf8(self.identifier.clone()).unwrap_or(format!("{:x?}", self.identifier));
+        let id = String::from_utf8(self.identifier.clone())
+            .unwrap_or_else(|_| format!("{:x?}", self.identifier));
         if self.owner_identifier.is_empty() {
             write!(f, "{id}")
         } else {
@@ -1106,7 +1106,7 @@ mod tests {
             content: vec![
                 (1000, String::from("A")),
                 (2000, String::from("B")),
-                (12345678, String::from("C")),
+                (12_345_678, String::from("C")),
             ],
             description: String::from("description"),
         };

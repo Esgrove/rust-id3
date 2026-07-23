@@ -135,10 +135,10 @@ impl Frame {
         });
         Self {
             id: if id.as_ref().len() == 3 {
-                match convert_id_2_to_3(id.as_ref()) {
-                    Some(translated) => ID::Valid(translated.to_string()),
-                    None => ID::Invalid(id.as_ref().to_string()),
-                }
+                convert_id_2_to_3(id.as_ref()).map_or_else(
+                    || ID::Invalid(id.as_ref().to_string()),
+                    |translated| ID::Valid(translated.to_string()),
+                )
             } else {
                 ID::Valid(id.as_ref().to_string())
             },

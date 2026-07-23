@@ -748,13 +748,10 @@ pub trait TagLike: private::Sealed {
     /// assert_eq!(tag.disc(), Some(2));
     /// ```
     fn set_disc(&mut self, disc: u32) {
-        let text = match self
+        let text = self
             .text_pair("TPOS")
             .and_then(|(_, total_discs)| total_discs)
-        {
-            Some(n) => format!("{disc}/{n}"),
-            None => format!("{disc}"),
-        };
+            .map_or_else(|| format!("{disc}"), |n| format!("{disc}/{n}"));
         self.set_text("TPOS", text);
     }
 
@@ -868,13 +865,10 @@ pub trait TagLike: private::Sealed {
     /// assert_eq!(tag.track(), Some(10));
     /// ```
     fn set_track(&mut self, track: u32) {
-        let text = match self
+        let text = self
             .text_pair("TRCK")
             .and_then(|(_, total_tracks)| total_tracks)
-        {
-            Some(n) => format!("{track}/{n}"),
-            None => format!("{track}"),
-        };
+            .map_or_else(|| format!("{track}"), |n| format!("{track}/{n}"));
         self.set_text("TRCK", text);
     }
 
@@ -1093,9 +1087,8 @@ pub trait TagLike: private::Sealed {
     fn remove_picture_by_type(&mut self, picture_type: PictureType) {
         self.frames_vec_mut().retain(|frame| {
             if frame.id() == "APIC" {
-                let pic = match *frame.content() {
-                    Content::Picture(ref picture) => picture,
-                    _ => return false,
+                let Content::Picture(ref pic) = *frame.content() else {
+                    return false;
                 };
                 return pic.picture_type != picture_type;
             }
@@ -1496,11 +1489,8 @@ pub trait TagLike: private::Sealed {
     fn remove_unique_file_identifier_by_owner_identifier(&mut self, owner_identifier: &str) {
         self.frames_vec_mut().retain(|frame| {
             if frame.id() == "UFID" {
-                let uf = match *frame.content() {
-                    Content::UniqueFileIdentifier(ref unique_file_identifier) => {
-                        unique_file_identifier
-                    }
-                    _ => return false,
+                let Content::UniqueFileIdentifier(ref uf) = *frame.content() else {
+                    return false;
                 };
                 return uf.owner_identifier != owner_identifier;
             }

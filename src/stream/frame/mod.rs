@@ -59,7 +59,7 @@ pub fn encode(
                 v3::Flags::FILE_ALTER_PRESERVATION,
                 frame.file_alter_preservation(),
             );
-            v3::encode(writer, frame, flags)
+            v3::encode(writer, frame, &flags)
         }
         Version::Id3v24 => {
             let mut flags = v4::Flags::empty();
@@ -72,7 +72,7 @@ pub fn encode(
                 v4::Flags::FILE_ALTER_PRESERVATION,
                 frame.file_alter_preservation(),
             );
-            v4::encode(writer, frame, flags)
+            v4::encode(writer, frame, &flags)
         }
     }
 }

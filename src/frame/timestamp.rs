@@ -67,17 +67,7 @@ impl fmt::Display for Timestamp {
 struct Parser<'a>(&'a str);
 
 impl Parser<'_> {
-    fn parse_timestamp(&mut self, source: &str) -> Result<Timestamp, ()> {
-        let mut parser = Parser(source);
-        let mut timestamp = Timestamp {
-            year: parser.parse_year()?,
-            month: None,
-            day: None,
-            hour: None,
-            minute: None,
-            second: None,
-        };
-
+    fn parse_timestamp(source: &str) -> Result<Timestamp, ()> {
         fn parse(mut parser: Parser, timestamp: &mut Timestamp) -> Result<(), ()> {
             parser.expect(b'-')?;
             timestamp.month = parser.parse_other().map(Some)?;
@@ -91,6 +81,16 @@ impl Parser<'_> {
             timestamp.second = parser.parse_other().ok();
             Ok(())
         }
+
+        let mut parser = Parser(source);
+        let mut timestamp = Timestamp {
+            year: parser.parse_year()?,
+            month: None,
+            day: None,
+            hour: None,
+            minute: None,
+            second: None,
+        };
         let _ = parse(parser, &mut timestamp);
 
         Ok(timestamp)
@@ -145,9 +145,7 @@ impl FromStr for Timestamp {
     type Err = ParseError;
 
     fn from_str(source: &str) -> Result<Self, Self::Err> {
-        Parser(source)
-            .parse_timestamp(source)
-            .map_err(|()| ParseError::Unmatched)
+        Parser::parse_timestamp(source).map_err(|()| ParseError::Unmatched)
     }
 }
 
