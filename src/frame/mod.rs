@@ -41,7 +41,7 @@ pub struct Frame {
 
 impl Frame {
     /// Check if this Frame is identical to another frame
-    pub(crate) fn compare(&self, other: &Frame) -> bool {
+    pub(crate) fn compare(&self, other: &Self) -> bool {
         if self.id == other.id {
             let content_eq = if let ID::Valid(id) = &self.id {
                 // some link frames are allowed to have the same id as long their content is different
@@ -133,7 +133,7 @@ impl Frame {
             let l = id.as_ref().len();
             l == 3 || l == 4
         });
-        Frame {
+        Self {
             id: if id.as_ref().len() == 3 {
                 match convert_id_2_to_3(id.as_ref()) {
                     Some(translated) => ID::Valid(translated.to_string()),
@@ -164,7 +164,8 @@ impl Frame {
     /// this or other tags.
     ///
     /// After decoding a tag, the initial encoding is only set for TXXX and GEOB frames.
-    pub fn set_encoding(mut self, encoding: Option<Encoding>) -> Self {
+    #[must_use]
+    pub const fn set_encoding(mut self, encoding: Option<Encoding>) -> Self {
         self.encoding = encoding;
         self
     }
@@ -203,6 +204,7 @@ impl Frame {
     ///
     /// The string returned us usually 4 bytes long except when the frame was read from an ID3v2.2
     /// tag and the ID could not be mapped to an ID3v2.3 ID.
+    #[must_use]
     pub fn id(&self) -> &str {
         match self.id {
             ID::Valid(ref id) | ID::Invalid(ref id) => id,
@@ -211,38 +213,41 @@ impl Frame {
 
     /// Returns the ID that is compatible with specified version or None if no ID is available in
     /// that version.
+    #[must_use]
     pub fn id_for_version(&self, version: Version) -> Option<&str> {
         match (version, &self.id) {
             (Version::Id3v22, ID::Valid(id)) => convert_id_3_to_2(id),
-            (Version::Id3v23, ID::Valid(id))
-            | (Version::Id3v24, ID::Valid(id))
+            (Version::Id3v23 | Version::Id3v24, ID::Valid(id))
             | (Version::Id3v22, ID::Invalid(id)) => Some(id),
             (_, ID::Invalid(_)) => None,
         }
     }
 
     /// Returns the content of the frame.
-    pub fn content(&self) -> &Content {
+    #[must_use]
+    pub const fn content(&self) -> &Content {
         &self.content
     }
 
-    /// Returns whether the tag_alter_preservation flag is set.
-    pub fn tag_alter_preservation(&self) -> bool {
+    /// Returns whether the `tag_alter_preservation` flag is set.
+    #[must_use]
+    pub const fn tag_alter_preservation(&self) -> bool {
         self.tag_alter_preservation
     }
 
-    /// Sets the tag_alter_preservation flag.
-    pub fn set_tag_alter_preservation(&mut self, tag_alter_preservation: bool) {
+    /// Sets the `tag_alter_preservation` flag.
+    pub const fn set_tag_alter_preservation(&mut self, tag_alter_preservation: bool) {
         self.tag_alter_preservation = tag_alter_preservation;
     }
 
-    /// Returns whether the file_alter_preservation flag is set.
-    pub fn file_alter_preservation(&self) -> bool {
+    /// Returns whether the `file_alter_preservation` flag is set.
+    #[must_use]
+    pub const fn file_alter_preservation(&self) -> bool {
         self.file_alter_preservation
     }
 
-    /// Sets the file_alter_preservation flag.
-    pub fn set_file_alter_preservation(&mut self, file_alter_preservation: bool) {
+    /// Sets the `file_alter_preservation` flag.
+    pub const fn set_file_alter_preservation(&mut self, file_alter_preservation: bool) {
         self.file_alter_preservation = file_alter_preservation;
     }
 
@@ -250,7 +255,8 @@ impl Frame {
     ///
     /// # Caveat
     /// See [`Frame::set_encoding`].
-    pub fn encoding(&self) -> Option<Encoding> {
+    #[must_use]
+    pub const fn encoding(&self) -> Option<Encoding> {
         self.encoding
     }
 
@@ -262,6 +268,7 @@ impl Frame {
     /// [ID3v2.4](http://id3.org/id3v2.4.0-frames),
     /// [ID3v2.3](http://id3.org/d3v2.3.0) and
     /// [ID3v2.2](http://id3.org/d3v2-00) standards.
+    #[must_use]
     pub fn name(&self) -> &str {
         match self.id() {
             // Ids and names defined in section 4 of http://id3.org/id3v2.4.0-frames
@@ -557,7 +564,7 @@ mod tests {
     fn test_display() {
         let title_frame = Frame::with_content("TIT2", Content::Text("title".to_owned()));
         assert_eq!(
-            format!("{}", title_frame),
+            format!("{title_frame}"),
             "Title/songname/content description = title"
         );
 
@@ -569,7 +576,7 @@ mod tests {
             }),
         );
         assert_eq!(
-            format!("{}", txxx_frame),
+            format!("{txxx_frame}"),
             "User defined text information frame = description: value"
         );
     }

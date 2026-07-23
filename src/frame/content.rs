@@ -13,7 +13,7 @@ use std::io;
 ///
 /// It is important to note that the ID3 spec has a variety of extensions of which not all are
 /// implemented by this library. When a new frame content type is added, the signature of this enum
-/// changes. Hence, the non_exhaustive attribute is set.
+/// changes. Hence, the `non_exhaustive` attribute is set.
 ///
 /// However, when a new frame type variant is added, frames that would previously decode to
 /// [`Unknown`] are now decoded to their new variants. This would break user code, such as custom
@@ -136,7 +136,7 @@ impl Content {
     pub fn new_text_values(texts: impl IntoIterator<Item = impl Into<String>>) -> Self {
         let text = texts
             .into_iter()
-            .map(|t| t.into())
+            .map(std::convert::Into::into)
             .inspect(|s| assert!(!s.contains('\u{0}')))
             .collect::<Vec<String>>()
             .join("\u{0}");
@@ -144,9 +144,10 @@ impl Content {
     }
 
     /// Returns the `Text` or None if the value is not `Text`.
+    #[must_use]
     pub fn text(&self) -> Option<&str> {
         match self {
-            Content::Text(content) => Some(content),
+            Self::Text(content) => Some(content),
             _ => None,
         }
     }
@@ -154,130 +155,146 @@ impl Content {
     /// Returns split values of the `Text` frame or None if the value is not `Text`. This is only
     /// useful for ID3v2.4 tags, which support text frames containing multiple values separated by
     /// null bytes. This method returns an iterator over the separated values.
+    #[must_use]
     pub fn text_values(&self) -> Option<impl Iterator<Item = &str>> {
         self.text().map(|content| content.split('\0'))
     }
 
     /// Returns the `ExtendedText` or None if the value is not `ExtendedText`.
-    pub fn extended_text(&self) -> Option<&ExtendedText> {
+    #[must_use]
+    pub const fn extended_text(&self) -> Option<&ExtendedText> {
         match self {
-            Content::ExtendedText(content) => Some(content),
+            Self::ExtendedText(content) => Some(content),
             _ => None,
         }
     }
 
     /// Returns the `Link` or None if the value is not `Link`.
+    #[must_use]
     pub fn link(&self) -> Option<&str> {
         match self {
-            Content::Link(content) => Some(content),
+            Self::Link(content) => Some(content),
             _ => None,
         }
     }
 
     /// Returns the `ExtendedLink` or None if the value is not `ExtendedLink`.
-    pub fn extended_link(&self) -> Option<&ExtendedLink> {
+    #[must_use]
+    pub const fn extended_link(&self) -> Option<&ExtendedLink> {
         match self {
-            Content::ExtendedLink(content) => Some(content),
+            Self::ExtendedLink(content) => Some(content),
             _ => None,
         }
     }
 
     /// Returns the `EncapsulatedObject` or None if the value is not `EncapsulatedObject`.
-    pub fn encapsulated_object(&self) -> Option<&EncapsulatedObject> {
+    #[must_use]
+    pub const fn encapsulated_object(&self) -> Option<&EncapsulatedObject> {
         match self {
-            Content::EncapsulatedObject(content) => Some(content),
+            Self::EncapsulatedObject(content) => Some(content),
             _ => None,
         }
     }
 
     /// Returns the `Comment` or None if the value is not `Comment`.
-    pub fn comment(&self) -> Option<&Comment> {
+    #[must_use]
+    pub const fn comment(&self) -> Option<&Comment> {
         match self {
-            Content::Comment(content) => Some(content),
+            Self::Comment(content) => Some(content),
             _ => None,
         }
     }
 
     /// Returns the `Lyrics` or None if the value is not `Lyrics`.
-    pub fn lyrics(&self) -> Option<&Lyrics> {
+    #[must_use]
+    pub const fn lyrics(&self) -> Option<&Lyrics> {
         match self {
-            Content::Lyrics(content) => Some(content),
+            Self::Lyrics(content) => Some(content),
             _ => None,
         }
     }
 
     /// Returns the `SynchronisedLyrics` or None if the value is not `SynchronisedLyrics`.
-    pub fn synchronised_lyrics(&self) -> Option<&SynchronisedLyrics> {
+    #[must_use]
+    pub const fn synchronised_lyrics(&self) -> Option<&SynchronisedLyrics> {
         match self {
-            Content::SynchronisedLyrics(content) => Some(content),
+            Self::SynchronisedLyrics(content) => Some(content),
             _ => None,
         }
     }
 
     /// Returns the `Picture` or None if the value is not `Picture`.
-    pub fn picture(&self) -> Option<&Picture> {
+    #[must_use]
+    pub const fn picture(&self) -> Option<&Picture> {
         match self {
-            Content::Picture(picture) => Some(picture),
+            Self::Picture(picture) => Some(picture),
             _ => None,
         }
     }
 
     /// Returns the `Chapter` or None if the value is not `Chapter`.
-    pub fn chapter(&self) -> Option<&Chapter> {
+    #[must_use]
+    pub const fn chapter(&self) -> Option<&Chapter> {
         match self {
-            Content::Chapter(chapter) => Some(chapter),
+            Self::Chapter(chapter) => Some(chapter),
             _ => None,
         }
     }
 
     /// Returns the `MpegLocationLookupTable` or None if the value is not
     /// `MpegLocationLookupTable`.
-    pub fn mpeg_location_lookup_table(&self) -> Option<&MpegLocationLookupTable> {
+    #[must_use]
+    pub const fn mpeg_location_lookup_table(&self) -> Option<&MpegLocationLookupTable> {
         match self {
-            Content::MpegLocationLookupTable(mpeg_table) => Some(mpeg_table),
+            Self::MpegLocationLookupTable(mpeg_table) => Some(mpeg_table),
             _ => None,
         }
     }
 
     /// Returns the `Popularimeter` or None if the value is not
     /// `Popularimeter`
-    pub fn popularimeter(&self) -> Option<&Popularimeter> {
+    #[must_use]
+    pub const fn popularimeter(&self) -> Option<&Popularimeter> {
         match self {
-            Content::Popularimeter(popularimeter) => Some(popularimeter),
+            Self::Popularimeter(popularimeter) => Some(popularimeter),
             _ => None,
         }
     }
 
     /// Returns the `TableOfContents` or None if the value is not `TableOfContents`.
-    pub fn table_of_contents(&self) -> Option<&TableOfContents> {
+    #[must_use]
+    pub const fn table_of_contents(&self) -> Option<&TableOfContents> {
         match self {
-            Content::TableOfContents(table_of_contents) => Some(table_of_contents),
+            Self::TableOfContents(table_of_contents) => Some(table_of_contents),
             _ => None,
         }
     }
 
     /// Returns the `UniqueFileIdentifier` or None if the value is not
     /// `Ufid`
-    pub fn unique_file_identifier(&self) -> Option<&UniqueFileIdentifier> {
+    #[must_use]
+    pub const fn unique_file_identifier(&self) -> Option<&UniqueFileIdentifier> {
         match self {
-            Content::UniqueFileIdentifier(unique_file_identifier) => Some(unique_file_identifier),
+            Self::UniqueFileIdentifier(unique_file_identifier) => Some(unique_file_identifier),
             _ => None,
         }
     }
 
     /// Returns the `InvolvedPeopleList` or None if the value is not `IPLS`/`TIPL`/`TMCL`
-    pub fn involved_people_list(&self) -> Option<&InvolvedPeopleList> {
+    #[must_use]
+    pub const fn involved_people_list(&self) -> Option<&InvolvedPeopleList> {
         match self {
-            Content::InvolvedPeopleList(involved_people_list) => Some(involved_people_list),
+            Self::InvolvedPeopleList(involved_people_list) => Some(involved_people_list),
             _ => None,
         }
     }
 
     /// Returns the `Unknown` or None if the value is not `Unknown`.
     #[deprecated(note = "Use to_unknown")]
+    #[must_use]
     pub fn unknown(&self) -> Option<&[u8]> {
         match self {
-            Content::Unknown(unknown) => Some(&unknown.data),
+            Self::Unknown(unknown) => Some(&unknown.data),
             _ => None,
         }
     }
@@ -288,7 +305,7 @@ impl Content {
     /// exists.
     pub fn to_unknown(&self) -> crate::Result<Cow<'_, Unknown>> {
         match self {
-            Content::Unknown(unknown) => Ok(Cow::Borrowed(unknown)),
+            Self::Unknown(unknown) => Ok(Cow::Borrowed(unknown)),
             content => {
                 let version = Version::default();
                 let mut data = Vec::new();
@@ -302,27 +319,27 @@ impl Content {
 impl fmt::Display for Content {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Content::Text(s) => write!(f, "{s}"),
-            Content::Link(s) => write!(f, "{s}"),
-            Content::EncapsulatedObject(enc_obj) => write!(f, "{enc_obj}"),
-            Content::ExtendedText(ext_text) => write!(f, "{ext_text}"),
-            Content::ExtendedLink(ext_link) => write!(f, "{ext_link}"),
-            Content::Comment(comment) => write!(f, "{comment}"),
-            Content::Popularimeter(popularimeter) => write!(f, "{popularimeter}"),
-            Content::Lyrics(lyrics) => write!(f, "{lyrics}",),
-            Content::SynchronisedLyrics(sync_lyrics) => write!(f, "{}", sync_lyrics.content_type),
-            Content::Picture(picture) => write!(f, "{picture}"),
-            Content::Chapter(chapter) => write!(f, "{chapter}"),
-            Content::MpegLocationLookupTable(mpeg_table) => write!(f, "{mpeg_table}"),
-            Content::Private(private) => write!(f, "{private}"),
-            Content::TableOfContents(table_of_contents) => write!(f, "{table_of_contents}"),
-            Content::UniqueFileIdentifier(unique_file_identifier) => {
+            Self::Text(s) => write!(f, "{s}"),
+            Self::Link(s) => write!(f, "{s}"),
+            Self::EncapsulatedObject(enc_obj) => write!(f, "{enc_obj}"),
+            Self::ExtendedText(ext_text) => write!(f, "{ext_text}"),
+            Self::ExtendedLink(ext_link) => write!(f, "{ext_link}"),
+            Self::Comment(comment) => write!(f, "{comment}"),
+            Self::Popularimeter(popularimeter) => write!(f, "{popularimeter}"),
+            Self::Lyrics(lyrics) => write!(f, "{lyrics}"),
+            Self::SynchronisedLyrics(sync_lyrics) => write!(f, "{}", sync_lyrics.content_type),
+            Self::Picture(picture) => write!(f, "{picture}"),
+            Self::Chapter(chapter) => write!(f, "{chapter}"),
+            Self::MpegLocationLookupTable(mpeg_table) => write!(f, "{mpeg_table}"),
+            Self::Private(private) => write!(f, "{private}"),
+            Self::TableOfContents(table_of_contents) => write!(f, "{table_of_contents}"),
+            Self::UniqueFileIdentifier(unique_file_identifier) => {
                 write!(f, "{unique_file_identifier}")
             }
-            Content::InvolvedPeopleList(involved_people_list) => {
+            Self::InvolvedPeopleList(involved_people_list) => {
                 write!(f, "{involved_people_list}")
             }
-            Content::Unknown(unknown) => write!(f, "{unknown}"),
+            Self::Unknown(unknown) => write!(f, "{unknown}"),
         }
     }
 }
@@ -522,14 +539,14 @@ impl SynchronisedLyrics {
             TimestampFormat::Mpeg => {
                 writeln!(writer, "Frame\t{}", self.content_type)?;
 
-                for (frame, lyric) in self.content.iter() {
+                for (frame, lyric) in &self.content {
                     writeln!(writer, "{frame}\t{lyric}")?;
                 }
             }
             TimestampFormat::Ms => {
                 writeln!(writer, "Timecode\t{}", self.content_type)?;
 
-                for (total_ms, lyric) in self.content.iter() {
+                for (total_ms, lyric) in &self.content {
                     let hours = total_ms / MILLISECONDS_PER_HOUR;
                     let mins = (total_ms % MILLISECONDS_PER_HOUR) / MILLISECONDS_PER_MINUTE;
                     let secs = (total_ms % MILLISECONDS_PER_MINUTE) / MILLISECONDS_PER_SECOND;
@@ -562,8 +579,8 @@ pub enum TimestampFormat {
 impl fmt::Display for TimestampFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TimestampFormat::Mpeg => f.write_str("MPEG frames"),
-            TimestampFormat::Ms => f.write_str("Milliseconds"),
+            Self::Mpeg => f.write_str("MPEG frames"),
+            Self::Ms => f.write_str("Milliseconds"),
         }
     }
 }
@@ -590,13 +607,13 @@ pub enum SynchronisedLyricsType {
 impl fmt::Display for SynchronisedLyricsType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SynchronisedLyricsType::Other => f.write_str("Other"),
-            SynchronisedLyricsType::Lyrics => f.write_str("Lyrics"),
-            SynchronisedLyricsType::Transcription => f.write_str("Transcription"),
-            SynchronisedLyricsType::PartName => f.write_str("Part name"),
-            SynchronisedLyricsType::Event => f.write_str("Event"),
-            SynchronisedLyricsType::Chord => f.write_str("Chord"),
-            SynchronisedLyricsType::Trivia => f.write_str("Trivia"),
+            Self::Other => f.write_str("Other"),
+            Self::Lyrics => f.write_str("Lyrics"),
+            Self::Transcription => f.write_str("Transcription"),
+            Self::PartName => f.write_str("Part name"),
+            Self::Event => f.write_str("Event"),
+            Self::Chord => f.write_str("Chord"),
+            Self::Trivia => f.write_str("Trivia"),
         }
     }
 }
@@ -661,28 +678,28 @@ impl From<PictureType> for u8 {
 impl fmt::Display for PictureType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PictureType::Other => f.write_str("Other"),
-            PictureType::Icon => f.write_str("Icon"),
-            PictureType::OtherIcon => f.write_str("Other icon"),
-            PictureType::CoverFront => f.write_str("Front cover"),
-            PictureType::CoverBack => f.write_str("Back cover"),
-            PictureType::Leaflet => f.write_str("Leaflet"),
-            PictureType::Media => f.write_str("Media"),
-            PictureType::LeadArtist => f.write_str("Lead artist"),
-            PictureType::Artist => f.write_str("Artist"),
-            PictureType::Conductor => f.write_str("Conductor"),
-            PictureType::Band => f.write_str("Band"),
-            PictureType::Composer => f.write_str("Composer"),
-            PictureType::Lyricist => f.write_str("Lyricist"),
-            PictureType::RecordingLocation => f.write_str("Recording location"),
-            PictureType::DuringRecording => f.write_str("During recording"),
-            PictureType::DuringPerformance => f.write_str("During performance"),
-            PictureType::ScreenCapture => f.write_str("Screen capture"),
-            PictureType::BrightFish => f.write_str("Bright fish"),
-            PictureType::Illustration => f.write_str("Illustration"),
-            PictureType::BandLogo => f.write_str("Band logo"),
-            PictureType::PublisherLogo => f.write_str("Publisher logo"),
-            PictureType::Undefined(b) => write!(f, "Undefined type {b}"),
+            Self::Other => f.write_str("Other"),
+            Self::Icon => f.write_str("Icon"),
+            Self::OtherIcon => f.write_str("Other icon"),
+            Self::CoverFront => f.write_str("Front cover"),
+            Self::CoverBack => f.write_str("Back cover"),
+            Self::Leaflet => f.write_str("Leaflet"),
+            Self::Media => f.write_str("Media"),
+            Self::LeadArtist => f.write_str("Lead artist"),
+            Self::Artist => f.write_str("Artist"),
+            Self::Conductor => f.write_str("Conductor"),
+            Self::Band => f.write_str("Band"),
+            Self::Composer => f.write_str("Composer"),
+            Self::Lyricist => f.write_str("Lyricist"),
+            Self::RecordingLocation => f.write_str("Recording location"),
+            Self::DuringRecording => f.write_str("During recording"),
+            Self::DuringPerformance => f.write_str("During performance"),
+            Self::ScreenCapture => f.write_str("Screen capture"),
+            Self::BrightFish => f.write_str("Bright fish"),
+            Self::Illustration => f.write_str("Illustration"),
+            Self::BandLogo => f.write_str("Band logo"),
+            Self::PublisherLogo => f.write_str("Publisher logo"),
+            Self::Undefined(b) => write!(f, "Undefined type {b}"),
         }
     }
 }
@@ -740,7 +757,7 @@ impl fmt::Display for Chapter {
             (0xffffffff, 0xffffffff) => (self.start_time, self.end_time, "ms"),
             (_, _) => (self.start_offset, self.end_offset, "b"),
         };
-        let frames: Vec<&str> = self.frames.iter().map(|f| f.id()).collect();
+        let frames: Vec<&str> = self.frames.iter().map(super::Frame::id).collect();
         write!(
             f,
             "{start}{unit}-{end}{unit}: {frames}",
@@ -754,7 +771,7 @@ impl fmt::Display for Chapter {
 
 impl Extend<Frame> for Chapter {
     fn extend<I: IntoIterator<Item = Frame>>(&mut self, iter: I) {
-        self.frames.extend(iter)
+        self.frames.extend(iter);
     }
 }
 
@@ -785,7 +802,7 @@ pub struct MpegLocationLookupTable {
     /// The number of bits in [`MpegLocationLookupTableReference::deviate_bytes`] to retain.
     /// Must be a multiple of 4.
     ///
-    /// The sum of bits_for_bytes and bits_for_millis may not exceed 64.
+    /// The sum of `bits_for_bytes` and `bits_for_millis` may not exceed 64.
     pub bits_for_bytes: u8,
     /// The number of bits in [`MpegLocationLookupTableReference::deviate_millis`] to retain.
     /// Must be a multiple of 4.
@@ -909,7 +926,7 @@ pub struct TableOfContents {
 
 impl fmt::Display for TableOfContents {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let frames: Vec<&str> = self.frames.iter().map(|f| f.id()).collect();
+        let frames: Vec<&str> = self.frames.iter().map(super::Frame::id).collect();
         write!(
             f,
             "isTopLevel:{top_level}, isOrdered:{ordered}, childList: []: {elements}, frames:{frames}",
@@ -923,7 +940,7 @@ impl fmt::Display for TableOfContents {
 
 impl Extend<Frame> for TableOfContents {
     fn extend<I: IntoIterator<Item = Frame>>(&mut self, iter: I) {
-        self.frames.extend(iter)
+        self.frames.extend(iter);
     }
 }
 
@@ -966,7 +983,7 @@ mod tests {
     #[test]
     fn content_text_display() {
         let text = Content::Text(String::from("text value"));
-        assert_eq!(format!("{}", text), "text value");
+        assert_eq!(format!("{text}"), "text value");
     }
 
     #[test]
@@ -975,13 +992,13 @@ mod tests {
             description: String::from("description value"),
             value: String::from("value value"),
         });
-        assert_eq!(format!("{}", ext_text), "description value: value value");
+        assert_eq!(format!("{ext_text}"), "description value: value value");
     }
 
     #[test]
     fn content_link_display() {
         let link = Content::Link(String::from("link value"));
-        assert_eq!(format!("{}", link), "link value");
+        assert_eq!(format!("{link}"), "link value");
     }
 
     #[test]
@@ -990,7 +1007,7 @@ mod tests {
             description: String::from("description value"),
             link: String::from("link value"),
         });
-        assert_eq!(format!("{}", ext_link), "description value: link value");
+        assert_eq!(format!("{ext_link}"), "description value: link value");
     }
 
     #[test]
@@ -1000,7 +1017,7 @@ mod tests {
             description: String::from("description value"),
             text: String::from("text value"),
         });
-        assert_eq!(format!("{}", comment), "description value: text value");
+        assert_eq!(format!("{comment}"), "description value: text value");
     }
 
     #[test]
@@ -1010,7 +1027,7 @@ mod tests {
             description: String::from("description value"),
             text: String::from("text value"),
         });
-        assert_eq!(format!("{}", lyrics), "description value: text value");
+        assert_eq!(format!("{lyrics}"), "description value: text value");
     }
 
     #[test]
@@ -1025,7 +1042,7 @@ mod tests {
             ],
             description: String::from("description"),
         });
-        assert_eq!(format!("{}", sync_lyrics), "Lyrics");
+        assert_eq!(format!("{sync_lyrics}"), "Lyrics");
     }
 
     #[test]
@@ -1037,7 +1054,7 @@ mod tests {
             data: vec![1, 2, 3],
         });
         assert_eq!(
-            format!("{}", picture),
+            format!("{picture}"),
             "description value: Artist (MIME type, 3 bytes)"
         );
     }
@@ -1049,7 +1066,7 @@ mod tests {
             identifier: String::from("901aebc0-fb6a-4500-a349-139df7450964").into_bytes(),
         });
         assert_eq!(
-            format!("{}", unique_file_identifier),
+            format!("{unique_file_identifier}"),
             "http://www.id3.org/dummy/ufid.html: 901aebc0-fb6a-4500-a349-139df7450964"
         );
     }
@@ -1060,7 +1077,7 @@ mod tests {
             version: Version::Id3v24,
             data: vec![1, 2, 3],
         });
-        assert_eq!(format!("{}", unknown), "ID3v2.4, 3 bytes");
+        assert_eq!(format!("{unknown}"), "ID3v2.4, 3 bytes");
     }
 
     #[test]

@@ -111,8 +111,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     .iter()
                     .map(|&byte| {
                         char::from_u32(byte.into())
-                            .map(String::from)
-                            .unwrap_or_else(|| format!("\\x{:02X}", byte))
+                            .map_or_else(|| format!("\\x{byte:02X}"), String::from)
                     })
                     .collect::<String>();
                 println!("{id}:{owner_identifier}=b\"{value}\"");

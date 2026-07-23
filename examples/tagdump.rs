@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut header = [0u8; 10];
     file.read_exact(&mut header)?;
-    assert!(&header[..3] == b"ID3");
+    assert_eq!(&header[..3], b"ID3");
     let tag_size: u32 = u32::from(header[9])
         | u32::from(header[8]) << 7
         | u32::from(header[7]) << 14

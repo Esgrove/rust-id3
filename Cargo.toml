@@ -1,8 +1,8 @@
 [package]
 name = "id3"
-version = "1.17.1"
+version = "2.0.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.98"
 authors = [
     "polyfloyd <floyd@polyfloyd.net>",
 ]
@@ -32,3 +32,9 @@ tokio = ["dep:tokio"]
 
 ## Picture decoding takes ~20% of time. Allow disabling it if it's unneeded.
 decode_picture = []
+
+[lints.clippy]
+enum_glob_use = "deny"
+unwrap_used = "deny"
+nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }

@@ -32,7 +32,7 @@ bitflags! {
     }
 }
 
-/// Used for sharing code between sync/async parsers, which is mainly complicated by ext_headers.
+/// Used for sharing code between sync/async parsers, which is mainly complicated by `ext_headers`.
 struct HeaderBuilder {
     version: Version,
     flags: Flags,
@@ -40,7 +40,7 @@ struct HeaderBuilder {
 }
 
 impl HeaderBuilder {
-    fn with_ext_header(self, size: u32) -> Header {
+    const fn with_ext_header(self, size: u32) -> Header {
         Header {
             version: self.version,
             flags: self.flags,
@@ -60,7 +60,7 @@ struct Header {
 }
 
 impl Header {
-    fn size(&self) -> u64 {
+    const fn size(&self) -> u64 {
         10 // Raw header.
     }
 
@@ -74,7 +74,7 @@ impl Header {
 }
 
 impl Header {
-    fn decode(mut reader: impl io::Read) -> crate::Result<Header> {
+    fn decode(mut reader: impl io::Read) -> crate::Result<Self> {
         let mut header = [0; 10];
         let nread = reader.read(&mut header)?;
         let base_header = Self::decode_base_header(&header[..nread])?;
@@ -98,7 +98,7 @@ impl Header {
             let mut ext_header = Vec::with_capacity(cmp::min(ext_remaining_size as usize, 0xffff));
             reader
                 .by_ref()
-                .take(ext_remaining_size as u64)
+                .take(u64::from(ext_remaining_size))
                 .read_to_end(&mut ext_header)?;
 
             ext_size
@@ -316,7 +316,8 @@ impl Encoder {
     /// * Unsynchronization is disabled due to compatibility issues
     /// * No compression
     /// * File is not marked as altered
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             version: Version::Id3v24,
             unsynchronisation: false,
@@ -329,13 +330,15 @@ impl Encoder {
     /// Sets the padding that is written after the tag.
     ///
     /// Should be only used when writing to a MP3 file
-    pub fn padding(mut self, padding: usize) -> Self {
+    #[must_use]
+    pub const fn padding(mut self, padding: usize) -> Self {
         self.padding = Some(padding);
         self
     }
 
     /// Sets the ID3 version.
-    pub fn version(mut self, version: Version) -> Self {
+    #[must_use]
+    pub const fn version(mut self, version: Version) -> Self {
         self.version = version;
         self
     }
@@ -345,13 +348,15 @@ impl Encoder {
     /// This avoids patterns that resemble MP3-frame headers from being
     /// encoded. If you are encoding to MP3 files and wish to be compatible
     /// with very old tools, you probably want this enabled.
-    pub fn unsynchronisation(mut self, unsynchronisation: bool) -> Self {
+    #[must_use]
+    pub const fn unsynchronisation(mut self, unsynchronisation: bool) -> Self {
         self.unsynchronisation = unsynchronisation;
         self
     }
 
     /// Enables or disables compression.
-    pub fn compression(mut self, compression: bool) -> Self {
+    #[must_use]
+    pub const fn compression(mut self, compression: bool) -> Self {
         self.compression = compression;
         self
     }
@@ -362,7 +367,8 @@ impl Encoder {
     /// that have a relation to the file contents:
     ///
     ///   AENC, ETCO, EQUA, MLLT, POSS, SYLT, SYTC, RVAD, TENC, TLEN, TSIZ
-    pub fn file_altered(mut self, file_altered: bool) -> Self {
+    #[must_use]
+    pub const fn file_altered(mut self, file_altered: bool) -> Self {
         self.file_altered = file_altered;
         self
     }
@@ -402,7 +408,7 @@ impl Encoder {
             match self.version {
                 Version::Id3v22 | Version::Id3v23 => unsynch::encode_vec(&mut frame_data),
                 Version::Id3v24 => {}
-            };
+            }
         }
         let tag_size = frame_data.len() + self.padding.unwrap_or(0);
         writer.write_all(b"ID3")?;
@@ -444,7 +450,7 @@ impl Encoder {
                 self.encode(tag, &mut w)?;
                 w.flush()?;
             }
-        };
+        }
 
         Ok(())
     }
@@ -495,7 +501,7 @@ pub fn locate_id3v2(reader: impl io::Read + io::Seek) -> crate::Result<Range<u64
     reader.seek(io::SeekFrom::Start(tag_size))?;
     let num_padding = reader
         .bytes()
-        .take_while(|rs| rs.as_ref().map(|b| *b == 0x00).unwrap_or(false))
+        .take_while(|rs| rs.as_ref().is_ok_and(|b| *b == 0x00))
         .count();
     Ok(start..tag_size + num_padding as u64)
 }
@@ -525,7 +531,7 @@ mod tests {
         tag.add_frame(EncapsulatedObject {
             mime_type: "Some Object".to_string(),
             filename: "application/octet-stream".to_string(),
-            description: "".to_string(),
+            description: String::new(),
             data: b"\xC0\xFF\xEE\x00".to_vec(),
         });
         let mut image_data = Vec::new();
@@ -760,7 +766,7 @@ mod tests {
         assert_eq!(tag.tables_of_contents().count(), 1);
 
         for x in tag.tables_of_contents() {
-            println!("{:?}", x);
+            println!("{x:?}");
         }
 
         let ctoc = tag.tables_of_contents().last().unwrap();

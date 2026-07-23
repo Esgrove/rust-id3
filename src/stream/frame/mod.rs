@@ -77,12 +77,12 @@ pub fn encode(
     }
 }
 
-/// Helper for str::from_utf8 that preserves any problematic pattern if applicable.
+/// Helper for `str::from_utf8` that preserves any problematic pattern if applicable.
 pub fn str_from_utf8(b: &[u8]) -> crate::Result<&str> {
     str::from_utf8(b).map_err(|err| {
         let bad = b[err.valid_up_to()..].to_vec();
         crate::Error {
-            kind: crate::ErrorKind::StringDecoding(bad.to_vec()),
+            kind: crate::ErrorKind::StringDecoding(bad),
             description: "data is not valid utf-8".to_string(),
             partial_tag: None,
         }
@@ -122,7 +122,7 @@ mod tests {
 
         let mut bytes = Vec::new();
         bytes.extend(id.bytes());
-        bytes.extend((u32_to_bytes(data.len() as u32)[1..]).iter().cloned());
+        bytes.extend((u32_to_bytes(data.len() as u32)[1..]).iter().copied());
         bytes.extend(data);
 
         let mut writer = Vec::new();
@@ -148,7 +148,7 @@ mod tests {
         let mut bytes = Vec::new();
         bytes.extend(id.bytes());
         bytes.extend(u32_to_bytes(data.len() as u32));
-        bytes.extend([0x00, 0x00].iter().cloned());
+        bytes.extend([0x00, 0x00].iter().copied());
         bytes.extend(data);
 
         let mut writer = Vec::new();
@@ -176,7 +176,7 @@ mod tests {
         let mut bytes = Vec::new();
         bytes.extend(id.bytes());
         bytes.extend(u32_to_bytes(unsynch::encode_u32(data.len() as u32)));
-        bytes.extend([0x60, 0x00].iter().cloned());
+        bytes.extend([0x60, 0x00].iter().copied());
         bytes.extend(data);
 
         let mut writer = Vec::new();

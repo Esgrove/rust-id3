@@ -250,7 +250,7 @@ impl<W: io::Write> Encoder<W> {
         let ref_packed_size = content
             .bits_for_bytes
             .saturating_add(content.bits_for_millis);
-        if ref_packed_size % 4 != 0 {
+        if !ref_packed_size.is_multiple_of(4) {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "MLLT bits_for_bytes + bits_for_millis must be a multiple of 4",
@@ -322,15 +322,9 @@ impl<W: io::Write> Encoder<W> {
     fn table_of_contents_content(&mut self, content: &TableOfContents) -> crate::Result<()> {
         self.string_with_other_encoding(Encoding::Latin1, &content.element_id)?;
         self.byte(0)?;
-        let top_level_flag = match content.top_level {
-            true => 2,
-            false => 0,
-        };
+        let top_level_flag = if content.top_level { 2 } else { 0 };
 
-        let ordered_flag = match content.ordered {
-            true => 1,
-            false => 0,
-        };
+        let ordered_flag = u8::from(content.ordered);
         self.byte(top_level_flag | ordered_flag)?;
         self.byte(content.elements.len() as u8)?;
 
@@ -376,7 +370,7 @@ pub fn encode(
         Content::UniqueFileIdentifier(c) => encoder.unique_file_identifier_content(c)?,
         Content::InvolvedPeopleList(c) => encoder.involved_people_list(c)?,
         Content::Unknown(c) => encoder.bytes(&c.data)?,
-    };
+    }
 
     writer.write_all(&buf)?;
     Ok(buf.len())
@@ -503,7 +497,7 @@ impl<'a> Decoder<'a> {
             let preview_len = self.r.len().min(64);
             let hex_preview = self.r[..preview_len]
                 .iter()
-                .map(|b| format!("{:02x}", b))
+                .map(|b| format!("{b:02x}"))
                 .collect::<Vec<_>>()
                 .join(" ");
             let ascii_preview: String = self.r[..preview_len]
@@ -642,7 +636,7 @@ impl<'a> Decoder<'a> {
             }
             (None, None) => None,
         })
-        .filter_map(|item| item.transpose())
+        .filter_map(std::result::Result::transpose)
         .collect::<crate::Result<Vec<InvolvedPeopleListItem>>>()?;
 
         Ok(Content::InvolvedPeopleList(InvolvedPeopleList { items }))
@@ -1007,7 +1001,7 @@ fn find_delim(encoding: Encoding, data: &[u8], index: usize) -> Option<usize> {
                 return None;
             }
 
-            for c in data[i..].iter() {
+            for c in &data[i..] {
                 if *c == 0 {
                     break;
                 }
@@ -1073,7 +1067,7 @@ pub fn find_closing_delim(encoding: Encoding, data: &[u8]) -> Option<usize> {
 }
 
 /// Returns the delimiter length for the specified encoding.
-fn delim_len(encoding: Encoding) -> usize {
+const fn delim_len(encoding: Encoding) -> usize {
     match encoding {
         Encoding::Latin1 | Encoding::UTF8 => 1,
         Encoding::UTF16 | Encoding::UTF16BE => 2,
@@ -1120,14 +1114,14 @@ mod tests {
                 };
 
                 for encoding in &[Encoding::Latin1, Encoding::UTF16] {
-                    println!("`{}`, `{}`, `{:?}`", mime_type, description, encoding);
+                    println!("`{mime_type}`, `{description}`, `{encoding:?}`");
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
                     data.extend(format.bytes());
                     data.push(picture_type.into());
                     data.extend(bytes_for_encoding(description, *encoding));
                     data.extend(delim_for_encoding(*encoding));
-                    data.extend(picture_data.iter().cloned());
+                    data.extend(picture_data.iter().copied());
 
                     assert_eq!(
                         *decode("PIC", Version::Id3v22, &data[..])
@@ -1176,7 +1170,7 @@ mod tests {
                     Encoding::UTF16,
                     Encoding::UTF16BE,
                 ] {
-                    println!("`{}`, `{}`, `{:?}`", mime_type, description, encoding);
+                    println!("`{mime_type}`, `{description}`, `{encoding:?}`");
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
                     data.extend(mime_type.bytes());
@@ -1184,7 +1178,7 @@ mod tests {
                     data.push(picture_type.into());
                     data.extend(bytes_for_encoding(description, *encoding));
                     data.extend(delim_for_encoding(*encoding));
-                    data.extend(picture_data.iter().cloned());
+                    data.extend(picture_data.iter().copied());
 
                     assert_eq!(
                         *decode("APIC", Version::Id3v23, &data[..])
@@ -1221,10 +1215,10 @@ mod tests {
                     Encoding::UTF16,
                     Encoding::UTF16BE,
                 ] {
-                    println!("`{}`, `{}`, `{:?}`", description, comment, encoding);
+                    println!("`{description}`, `{comment}`, `{encoding:?}`");
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
-                    data.extend(b"eng".iter().cloned());
+                    data.extend(b"eng".iter().copied());
                     data.extend(bytes_for_encoding(description, *encoding));
                     data.extend(delim_for_encoding(*encoding));
                     data.extend(bytes_for_encoding(comment, *encoding));
@@ -1264,10 +1258,10 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{:?}`", encoding);
+            println!("`{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(b"eng".iter().cloned());
+            data.extend(b"eng".iter().copied());
             data.extend(bytes_for_encoding(description, *encoding));
             data.extend(bytes_for_encoding(comment, *encoding));
             assert!(decode("COMM", Version::Id3v23, &data[..]).is_err());
@@ -1280,19 +1274,19 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{:?}`", encoding);
+            println!("`{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(b"eng".iter().cloned());
+            data.extend(b"eng".iter().copied());
             data.extend(delim_for_encoding(*encoding));
             data.extend(bytes_for_encoding(comment, *encoding));
             let content = frame::Comment {
                 lang: "eng".to_string(),
-                description: "".to_string(),
+                description: String::new(),
                 text: comment.to_string(),
             };
-            println!("data == {:?}", data);
-            println!("content == {:?}", content);
+            println!("data == {data:?}");
+            println!("content == {content:?}");
             assert_eq!(
                 *decode("COMM", Version::Id3v23, &data[..])
                     .unwrap()
@@ -1311,7 +1305,7 @@ mod tests {
         assert_eq!(
             decode("POPM", Version::Id3v23, &bin[..]).unwrap().0,
             Content::Popularimeter(Popularimeter {
-                user: "".to_string(),
+                user: String::new(),
                 rating: 255,
                 counter: 0xaaaaaa,
             })
@@ -1322,7 +1316,7 @@ mod tests {
         assert_eq!(
             decode("POPM", Version::Id3v23, &bin[..]).unwrap().0,
             Content::Popularimeter(Popularimeter {
-                user: "".to_string(),
+                user: String::new(),
                 rating: 255,
                 counter: 0xaaaaaaaaaaaaaaaa,
             })
@@ -1376,7 +1370,7 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{}`, `{:?}`", text, encoding);
+            println!("`{text}`, `{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
             data.extend(bytes_for_encoding(text, *encoding));
@@ -1411,7 +1405,7 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{}`, `{:?}`", text, encoding);
+            println!("`{text}`, `{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
             data.extend(bytes_for_encoding(text, *encoding));
@@ -1449,7 +1443,7 @@ mod tests {
                     Encoding::UTF16,
                     Encoding::UTF16BE,
                 ] {
-                    println!("{:?}", encoding);
+                    println!("{encoding:?}");
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
                     data.extend(bytes_for_encoding(key, *encoding));
@@ -1490,7 +1484,7 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{:?}`", encoding);
+            println!("`{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
             data.extend(bytes_for_encoding(key, *encoding));
@@ -1502,7 +1496,7 @@ mod tests {
     #[test]
     fn test_weblink() {
         for link in &["", "http://www.rust-lang.org/"] {
-            println!("`{:?}`", link);
+            println!("`{link:?}`");
             let data = link.as_bytes().to_vec();
 
             assert_eq!(
@@ -1538,7 +1532,7 @@ mod tests {
                     Encoding::UTF16,
                     Encoding::UTF16BE,
                 ] {
-                    println!("`{}`, `{}`, `{:?}`", description, link, encoding);
+                    println!("`{description}`, `{link}`, `{encoding:?}`");
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
                     data.extend(bytes_for_encoding(description, *encoding));
@@ -1579,7 +1573,7 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{:?}`", encoding);
+            println!("`{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
             data.extend(bytes_for_encoding(description, *encoding));
@@ -1601,10 +1595,10 @@ mod tests {
                     Encoding::UTF16,
                     Encoding::UTF16BE,
                 ] {
-                    println!("`{}`, `{}, `{:?}`", description, text, encoding);
+                    println!("`{description}`, `{text}, `{encoding:?}`");
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
-                    data.extend(b"eng".iter().cloned());
+                    data.extend(b"eng".iter().copied());
                     data.extend(bytes_for_encoding(description, *encoding));
                     data.extend(delim_for_encoding(*encoding));
                     data.extend(bytes_for_encoding(text, *encoding));
@@ -1644,10 +1638,10 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{:?}`", encoding);
+            println!("`{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(b"eng".iter().cloned());
+            data.extend(b"eng".iter().copied());
             data.extend(bytes_for_encoding(description, *encoding));
             data.extend(bytes_for_encoding(lyrics, *encoding));
             assert!(decode("USLT", Version::Id3v23, &data[..]).is_err());
@@ -1689,7 +1683,7 @@ mod tests {
                 Encoding::UTF16,
                 Encoding::UTF16BE,
             ] {
-                println!("`{:?}`, `{:?}`", people_list, encoding);
+                println!("`{people_list:?}`, `{encoding:?}`");
                 let mut data = Vec::new();
                 data.push(*encoding as u8);
                 for (involvement, involvee) in people_list {
@@ -1735,7 +1729,7 @@ mod tests {
             Encoding::UTF16,
             Encoding::UTF16BE,
         ] {
-            println!("`{:?}`", encoding);
+            println!("`{encoding:?}`");
             let mut data = Vec::new();
             data.push(*encoding as u8);
             data.extend(bytes_for_encoding("involvement", *encoding));
@@ -1755,7 +1749,7 @@ mod tests {
                     InvolvedPeopleListItem {
                         involvement: "other involvement".to_string(),
                         // Assume empty string if value is missing
-                        involvee: "".to_string(),
+                        involvee: String::new(),
                     },
                 ],
             };
@@ -1796,7 +1790,7 @@ mod tests {
         let mut data_out = Vec::new();
         encode(&mut data_out, &mllt, Version::Id3v23, Encoding::UTF8).unwrap();
         let expect_data = b"\x00\x01\x00\x01\xa2\x00\x00\x0f\x04\x04\x12\x34\x56";
-        assert_eq!(format!("{:x?}", data_out), format!("{:x?}", expect_data));
+        assert_eq!(format!("{data_out:x?}"), format!("{:x?}", expect_data));
         let mllt_decoded = decode("MLLT", Version::Id3v23, &*data_out).unwrap().0;
         assert_eq!(mllt, mllt_decoded);
     }
@@ -1827,7 +1821,7 @@ mod tests {
         let mut data_out = Vec::new();
         encode(&mut data_out, &mllt, Version::Id3v23, Encoding::UTF8).unwrap();
         let expect_data = b"\x00\x01\x00\x01\xa2\x00\x00\x0f\x08\x08\x11\x22\x33\x44\x55\x66";
-        assert_eq!(format!("{:x?}", data_out), format!("{:x?}", expect_data));
+        assert_eq!(format!("{data_out:x?}"), format!("{:x?}", expect_data));
         let mllt_decoded = decode("MLLT", Version::Id3v23, &*data_out).unwrap().0;
         assert_eq!(mllt, mllt_decoded);
     }
@@ -1859,7 +1853,7 @@ mod tests {
         encode(&mut data_out, &mllt, Version::Id3v23, Encoding::UTF8).unwrap();
         let expect_data =
             b"\x00\x01\x00\x01\xa2\x00\x00\x0f\x0c\x0c\x11\x12\x22\x33\x34\x44\x55\x56\x66";
-        assert_eq!(format!("{:x?}", data_out), format!("{:x?}", expect_data));
+        assert_eq!(format!("{data_out:x?}"), format!("{:x?}", expect_data));
         let mllt_decoded = decode("MLLT", Version::Id3v23, &*data_out).unwrap().0;
         assert_eq!(mllt, mllt_decoded);
     }

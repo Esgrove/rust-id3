@@ -36,11 +36,12 @@ impl Version {
     ///
     /// assert_eq!(Version::Id3v24.minor(), 4);
     /// ```
-    pub fn minor(self) -> u8 {
+    #[must_use]
+    pub const fn minor(self) -> u8 {
         match self {
-            Version::Id3v22 => 2,
-            Version::Id3v23 => 3,
-            Version::Id3v24 => 4,
+            Self::Id3v22 => 2,
+            Self::Id3v23 => 3,
+            Self::Id3v24 => 4,
         }
     }
 }
@@ -48,9 +49,9 @@ impl Version {
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Version::Id3v22 => write!(f, "ID3v2.2"),
-            Version::Id3v23 => write!(f, "ID3v2.3"),
-            Version::Id3v24 => write!(f, "ID3v2.4"),
+            Self::Id3v22 => write!(f, "ID3v2.2"),
+            Self::Id3v23 => write!(f, "ID3v2.3"),
+            Self::Id3v24 => write!(f, "ID3v2.4"),
         }
     }
 }
@@ -66,15 +67,17 @@ pub struct Tag {
 
 impl<'a> Tag {
     /// Creates a new ID3v2.4 tag with no frames.
-    pub fn new() -> Tag {
-        Tag::default()
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Used for creating new tag with a specific version.
-    pub fn with_version(version: Version) -> Tag {
-        Tag {
+    #[must_use]
+    pub fn with_version(version: Version) -> Self {
+        Self {
             version,
-            ..Tag::default()
+            ..Self::default()
         }
     }
 
@@ -149,7 +152,7 @@ impl<'a> Tag {
 
     /// Attempts to read an ID3 tag from the reader.
     #[deprecated(note = "use read_from2")]
-    pub fn read_from(reader: impl io::Read) -> crate::Result<Tag> {
+    pub fn read_from(reader: impl io::Read) -> crate::Result<Self> {
         stream::tag::decode(reader)
     }
 
@@ -159,7 +162,7 @@ impl<'a> Tag {
     ///
     /// In the case of both Aiff/Wav tags and a ID3 header being present, the header takes
     /// precense.
-    pub fn read_from2(reader: impl io::Read + io::Seek) -> crate::Result<Tag> {
+    pub fn read_from2(reader: impl io::Read + io::Seek) -> crate::Result<Self> {
         let mut b = BufReader::new(reader);
         let probe = b.fill_buf()?;
 
@@ -179,8 +182,8 @@ impl<'a> Tag {
     }
 
     /// Attempts to read an ID3 tag from the file at the indicated path.
-    pub fn read_from_path(path: impl AsRef<Path>) -> crate::Result<Tag> {
-        Tag::read_from2(File::open(path)?)
+    pub fn read_from_path(path: impl AsRef<Path>) -> crate::Result<Self> {
+        Self::read_from2(File::open(path)?)
     }
 
     /// Attempts to read an ID3 tag via Tokio from the file at the indicated path.
@@ -192,39 +195,39 @@ impl<'a> Tag {
 
     /// Reads an AIFF stream and returns any present ID3 tag.
     #[deprecated(note = "use read_from")]
-    pub fn read_from_aiff(reader: impl io::Read + io::Seek) -> crate::Result<Tag> {
+    pub fn read_from_aiff(reader: impl io::Read + io::Seek) -> crate::Result<Self> {
         chunk::load_id3_chunk::<chunk::AiffFormat, _>(reader)
     }
 
     /// Reads an AIFF file at the specified path and returns any present ID3 tag.
     #[deprecated(note = "use read_from_path")]
-    pub fn read_from_aiff_path(path: impl AsRef<Path>) -> crate::Result<Tag> {
+    pub fn read_from_aiff_path(path: impl AsRef<Path>) -> crate::Result<Self> {
         let mut file = BufReader::new(File::open(path)?);
         chunk::load_id3_chunk::<chunk::AiffFormat, _>(&mut file)
     }
 
     /// Reads an AIFF file and returns any present ID3 tag.
     #[deprecated(note = "use read_from_file")]
-    pub fn read_from_aiff_file(file: impl StorageFile) -> crate::Result<Tag> {
+    pub fn read_from_aiff_file(file: impl StorageFile) -> crate::Result<Self> {
         chunk::load_id3_chunk::<chunk::AiffFormat, _>(file)
     }
 
     /// Reads an WAV stream and returns any present ID3 tag.
     #[deprecated(note = "use read_from")]
-    pub fn read_from_wav(reader: impl io::Read + io::Seek) -> crate::Result<Tag> {
+    pub fn read_from_wav(reader: impl io::Read + io::Seek) -> crate::Result<Self> {
         chunk::load_id3_chunk::<chunk::WavFormat, _>(reader)
     }
 
     /// Reads an WAV file at the specified path and returns any present ID3 tag.
     #[deprecated(note = "use read_from_path")]
-    pub fn read_from_wav_path(path: impl AsRef<Path>) -> crate::Result<Tag> {
+    pub fn read_from_wav_path(path: impl AsRef<Path>) -> crate::Result<Self> {
         let mut file = BufReader::new(File::open(path)?);
         chunk::load_id3_chunk::<chunk::WavFormat, _>(&mut file)
     }
 
     /// Reads an WAV file and returns any present ID3 tag.
     #[deprecated(note = "use read_from_file")]
-    pub fn read_from_wav_file(file: impl StorageFile) -> crate::Result<Tag> {
+    pub fn read_from_wav_file(file: impl StorageFile) -> crate::Result<Self> {
         chunk::load_id3_chunk::<chunk::WavFormat, _>(file)
     }
 
@@ -303,7 +306,8 @@ impl<'a> Tag {
     }
 
     /// Returns version of the read tag.
-    pub fn version(&self) -> Version {
+    #[must_use]
+    pub const fn version(&self) -> Version {
         self.version
     }
 
@@ -588,7 +592,7 @@ impl<'a> Tag {
 }
 
 impl PartialEq for Tag {
-    fn eq(&self, other: &Tag) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.frames.len() == other.frames.len()
             && self.frames().all(|frame| other.frames.contains(frame))
     }
@@ -605,7 +609,7 @@ impl FromIterator<Frame> for Tag {
 
 impl Extend<Frame> for Tag {
     fn extend<I: IntoIterator<Item = Frame>>(&mut self, iter: I) {
-        self.frames.extend(iter)
+        self.frames.extend(iter);
     }
 }
 
@@ -620,8 +624,8 @@ impl TagLike for Tag {
 }
 
 impl From<v1::Tag> for Tag {
-    fn from(tag_v1: v1::Tag) -> Tag {
-        let mut tag = Tag::new();
+    fn from(tag_v1: v1::Tag) -> Self {
+        let mut tag = Self::new();
         if let Some(genre) = tag_v1.genre() {
             tag.set_genre(genre.to_string());
         }
@@ -640,7 +644,7 @@ impl From<v1::Tag> for Tag {
         if !tag_v1.comment.is_empty() {
             tag.add_frame(Comment {
                 lang: "eng".to_string(),
-                description: "".to_string(),
+                description: String::new(),
                 text: tag_v1.comment,
             });
         }
@@ -668,7 +672,7 @@ mod tests {
             .map_err(|err| match err.kind() {
                 io::ErrorKind::NotFound => io::Error::new(
                     io::ErrorKind::NotFound,
-                    format!("{}. Is ffprobe present in $PATH?", err),
+                    format!("{err}. Is ffprobe present in $PATH?"),
                 ),
                 _ => err,
             })?;
@@ -715,7 +719,7 @@ mod tests {
         assert!(!output.contains("Estimating duration from bitrate, this may be inaccurate"));
         assert!(!output.contains("bytes of junk at"));
         // Also show in console too for manual double check
-        println!("{}", output);
+        println!("{output}");
     }
 
     #[test]
@@ -796,7 +800,7 @@ mod tests {
         let output = ffprobe(&tmp).unwrap();
         assert!(!output.contains("Input/output error"));
         // Also show in console too for manual double check
-        println!("{}", output);
+        println!("{output}");
 
         // Check written data
         tag = Tag::read_from_path(&tmp).unwrap();
@@ -832,7 +836,7 @@ mod tests {
         assert_eq!(tag.title(), Some("Some Great Song"));
         assert_eq!(tag.artist(), Some("Some Great Band"));
         if cfg!(feature = "decode_picture") {
-            assert!(tag.pictures().next().is_some())
+            assert!(tag.pictures().next().is_some());
         }
     }
 
@@ -843,7 +847,7 @@ mod tests {
         assert_eq!(tag.title(), Some("Some Great Song"));
         assert_eq!(tag.artist(), Some("Some Great Band"));
         if cfg!(feature = "decode_picture") {
-            assert!(tag.pictures().next().is_some())
+            assert!(tag.pictures().next().is_some());
         }
     }
 
@@ -1004,7 +1008,7 @@ mod tests {
 
         file.read_exact(&mut trailing_data).unwrap();
 
-        assert_eq!(&trailing_data, data)
+        assert_eq!(&trailing_data, data);
     }
 
     #[test]
@@ -1059,7 +1063,7 @@ mod tests {
         assert_eq!(count, tag.encapsulated_objects().count());
     }
 
-    /// Read an IPLS frame with UTF-16 encording in an ID3v2.3 tag written by MusicBrainz Picard
+    /// Read an IPLS frame with UTF-16 encording in an ID3v2.3 tag written by `MusicBrainz` Picard
     /// 2.12.3.
     #[test]
     fn test_ipls_id3v23_utf16() {
@@ -1104,7 +1108,7 @@ mod tests {
         assert_eq!(&involved_people, &new_involved_people,);
     }
 
-    /// Read `TIPL` and `TMCL` frames with UTF-8 encording in an ID3v2.4 tag written by MusicBrainz
+    /// Read `TIPL` and `TMCL` frames with UTF-8 encording in an ID3v2.4 tag written by `MusicBrainz`
     /// Picard 2.12.3.
     #[test]
     fn test_ipls_id3v24_utf8() {

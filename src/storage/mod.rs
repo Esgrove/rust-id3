@@ -33,9 +33,9 @@ impl Format {
             return None;
         }
         match (&probe[..3], &probe[..4], &probe[8..12]) {
-            (b"ID3", _, _) => Some(Format::Header),
-            (_, b"FORM", _) => Some(Format::Aiff),
-            (_, b"RIFF", b"WAVE") => Some(Format::Wav),
+            (b"ID3", _, _) => Some(Self::Header),
+            (_, b"FORM", _) => Some(Self::Aiff),
+            (_, b"RIFF", b"WAVE") => Some(Self::Wav),
             _ => None,
         }
     }
@@ -73,7 +73,7 @@ impl<T: StorageFile> StorageFile for &mut T {
 
 impl StorageFile for fs::File {
     fn set_len(&mut self, new_len: u64) -> io::Result<()> {
-        fs::File::set_len(self, new_len)
+        Self::set_len(self, new_len)
     }
 }
 
@@ -102,7 +102,7 @@ mod tests {
     fn probe(path: impl AsRef<Path>) -> [u8; 12] {
         let mut f = fs::File::open(path).unwrap();
         let mut b = [0u8; 12];
-        f.read(&mut b[..]).unwrap();
+        f.read_exact(&mut b[..]).unwrap();
         b
     }
 

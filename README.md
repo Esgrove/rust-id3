@@ -126,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Contributing
 
-Do you think you have found a bug? Then please report it via the GitHub issue tracker. Make sure to
+Do you think you have found a bug? Then please report it via the `GitHub` issue tracker. Make sure to
 attach any problematic files that can be used to reproduce the issue. Such files are also used to
 create regression tests that ensure that your bug will never return.
 

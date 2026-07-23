@@ -13,7 +13,7 @@ pub enum ContentCmp<'a> {
 
 impl PartialEq for ContentCmp<'_> {
     fn eq(&self, other: &Self) -> bool {
-        use ContentCmp::*;
+        use ContentCmp::{Comparable, Same};
 
         match (self, other) {
             (Comparable(c1), Comparable(c2)) => c1 == c2,

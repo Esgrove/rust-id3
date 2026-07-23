@@ -19,23 +19,23 @@ impl Encoding {
         let bytes = bytes.as_ref();
         if bytes.is_empty() {
             // UTF16 decoding requires at least 2 bytes for it not to error.
-            return Ok("".to_string());
+            return Ok(String::new());
         }
         match self {
-            Encoding::Latin1 => Ok(string_from_latin1(bytes)),
-            Encoding::UTF8 => Ok(String::from_utf8(bytes.to_vec())?),
-            Encoding::UTF16 => string_from_utf16(bytes),
-            Encoding::UTF16BE => string_from_utf16be(bytes),
+            Self::Latin1 => Ok(string_from_latin1(bytes)),
+            Self::UTF8 => Ok(String::from_utf8(bytes.to_vec())?),
+            Self::UTF16 => string_from_utf16(bytes),
+            Self::UTF16BE => string_from_utf16be(bytes),
         }
     }
 
     pub(crate) fn encode<'a>(&self, string: impl AsRef<str> + 'a) -> Vec<u8> {
         let string = string.as_ref();
         match self {
-            Encoding::Latin1 => string_to_latin1(string),
-            Encoding::UTF8 => string.as_bytes().to_vec(),
-            Encoding::UTF16 => string_to_utf16(string),
-            Encoding::UTF16BE => string_to_utf16be(string),
+            Self::Latin1 => string_to_latin1(string),
+            Self::UTF8 => string.as_bytes().to_vec(),
+            Self::UTF16 => string_to_utf16(string),
+            Self::UTF16BE => string_to_utf16be(string),
         }
     }
 }

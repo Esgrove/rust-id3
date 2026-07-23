@@ -110,10 +110,10 @@ pub fn encode(mut writer: impl io::Write, frame: &Frame, flags: Flags) -> crate:
         (content_buf.len() + comp_hint_delta) as u32,
     ))?;
     writer.write_u16::<BigEndian>(flags.bits())?;
-    if let Some(s) = decompressed_size {
-        if flags.contains(Flags::DATA_LENGTH_INDICATOR) {
-            writer.write_u32::<BigEndian>(unsynch::encode_u32(s as u32))?;
-        }
+    if let Some(s) = decompressed_size
+        && flags.contains(Flags::DATA_LENGTH_INDICATOR)
+    {
+        writer.write_u32::<BigEndian>(unsynch::encode_u32(s as u32))?;
     }
     writer.write_all(&content_buf)?;
     Ok(10 + comp_hint_delta + content_buf.len())
