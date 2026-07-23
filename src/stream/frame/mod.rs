@@ -113,7 +113,7 @@ mod tests {
 
         let mut data = Vec::new();
         data.push(encoding as u8);
-        data.extend(Encoding::UTF16.encode(text).into_iter());
+        data.extend(Encoding::UTF16.encode(text));
 
         let content = decode_content(&data[..], Version::Id3v22, id, false, false)
             .unwrap()
@@ -123,7 +123,7 @@ mod tests {
         let mut bytes = Vec::new();
         bytes.extend(id.bytes());
         bytes.extend((u32_to_bytes(data.len() as u32)[1..]).iter().cloned());
-        bytes.extend(data.into_iter());
+        bytes.extend(data);
 
         let mut writer = Vec::new();
         encode(&mut writer, &frame, Version::Id3v22, false).unwrap();
@@ -138,7 +138,7 @@ mod tests {
 
         let mut data = Vec::new();
         data.push(encoding as u8);
-        data.extend(Encoding::UTF16.encode(text).into_iter());
+        data.extend(Encoding::UTF16.encode(text));
 
         let content = decode_content(&data[..], Version::Id3v23, id, false, false)
             .unwrap()
@@ -147,9 +147,9 @@ mod tests {
 
         let mut bytes = Vec::new();
         bytes.extend(id.bytes());
-        bytes.extend(u32_to_bytes(data.len() as u32).into_iter());
+        bytes.extend(u32_to_bytes(data.len() as u32));
         bytes.extend([0x00, 0x00].iter().cloned());
-        bytes.extend(data.into_iter());
+        bytes.extend(data);
 
         let mut writer = Vec::new();
         encode(&mut writer, &frame, Version::Id3v23, false).unwrap();
@@ -175,9 +175,9 @@ mod tests {
 
         let mut bytes = Vec::new();
         bytes.extend(id.bytes());
-        bytes.extend(u32_to_bytes(unsynch::encode_u32(data.len() as u32)).into_iter());
+        bytes.extend(u32_to_bytes(unsynch::encode_u32(data.len() as u32)));
         bytes.extend([0x60, 0x00].iter().cloned());
-        bytes.extend(data.into_iter());
+        bytes.extend(data);
 
         let mut writer = Vec::new();
         encode(&mut writer, &frame, Version::Id3v24, false).unwrap();

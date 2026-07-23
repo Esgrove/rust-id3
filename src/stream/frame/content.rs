@@ -1142,8 +1142,8 @@ mod tests {
                     data.push(*encoding as u8);
                     data.extend(format.bytes());
                     data.push(picture_type.into());
-                    data.extend(bytes_for_encoding(description, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
+                    data.extend(bytes_for_encoding(description, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
                     data.extend(picture_data.iter().cloned());
 
                     assert_eq!(
@@ -1199,8 +1199,8 @@ mod tests {
                     data.extend(mime_type.bytes());
                     data.push(0x0);
                     data.push(picture_type.into());
-                    data.extend(bytes_for_encoding(description, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
+                    data.extend(bytes_for_encoding(description, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
                     data.extend(picture_data.iter().cloned());
 
                     assert_eq!(
@@ -1242,9 +1242,9 @@ mod tests {
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
                     data.extend(b"eng".iter().cloned());
-                    data.extend(bytes_for_encoding(description, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
-                    data.extend(bytes_for_encoding(comment, *encoding).into_iter());
+                    data.extend(bytes_for_encoding(description, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
+                    data.extend(bytes_for_encoding(comment, *encoding));
 
                     let content = frame::Comment {
                         lang: "eng".to_string(),
@@ -1285,8 +1285,8 @@ mod tests {
             let mut data = Vec::new();
             data.push(*encoding as u8);
             data.extend(b"eng".iter().cloned());
-            data.extend(bytes_for_encoding(description, *encoding).into_iter());
-            data.extend(bytes_for_encoding(comment, *encoding).into_iter());
+            data.extend(bytes_for_encoding(description, *encoding));
+            data.extend(bytes_for_encoding(comment, *encoding));
             assert!(decode("COMM", Version::Id3v23, &data[..]).is_err());
         }
         println!("Empty description");
@@ -1302,7 +1302,7 @@ mod tests {
             data.push(*encoding as u8);
             data.extend(b"eng".iter().cloned());
             data.extend(delim_for_encoding(*encoding));
-            data.extend(bytes_for_encoding(comment, *encoding).into_iter());
+            data.extend(bytes_for_encoding(comment, *encoding));
             let content = frame::Comment {
                 lang: "eng".to_string(),
                 description: "".to_string(),
@@ -1360,7 +1360,7 @@ mod tests {
                 println!("`{}`, `{:?}`", text, *encoding);
                 let mut data = Vec::new();
                 data.push(*encoding as u8);
-                data.extend(bytes_for_encoding(text, *encoding).into_iter());
+                data.extend(bytes_for_encoding(text, *encoding));
 
                 assert_eq!(
                     decode("TALB", Version::Id3v23, &data[..])
@@ -1396,7 +1396,7 @@ mod tests {
             println!("`{}`, `{:?}`", text, encoding);
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(bytes_for_encoding(text, *encoding).into_iter());
+            data.extend(bytes_for_encoding(text, *encoding));
 
             assert_eq!(
                 decode("TALB", Version::Id3v24, &data[..])
@@ -1431,7 +1431,7 @@ mod tests {
             println!("`{}`, `{:?}`", text, encoding);
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(bytes_for_encoding(text, *encoding).into_iter());
+            data.extend(bytes_for_encoding(text, *encoding));
 
             assert_eq!(
                 decode("TALB", Version::Id3v24, &data[..])
@@ -1469,9 +1469,9 @@ mod tests {
                     println!("{:?}", encoding);
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
-                    data.extend(bytes_for_encoding(key, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
-                    data.extend(bytes_for_encoding(value, *encoding).into_iter());
+                    data.extend(bytes_for_encoding(key, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
+                    data.extend(bytes_for_encoding(value, *encoding));
 
                     let content = frame::ExtendedText {
                         description: key.to_string(),
@@ -1510,8 +1510,8 @@ mod tests {
             println!("`{:?}`", encoding);
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(bytes_for_encoding(key, *encoding).into_iter());
-            data.extend(bytes_for_encoding(value, *encoding).into_iter());
+            data.extend(bytes_for_encoding(key, *encoding));
+            data.extend(bytes_for_encoding(value, *encoding));
             assert!(decode("TXXX", Version::Id3v23, &data[..]).is_err());
         }
     }
@@ -1558,9 +1558,9 @@ mod tests {
                     println!("`{}`, `{}`, `{:?}`", description, link, encoding);
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
-                    data.extend(bytes_for_encoding(description, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
-                    data.extend(bytes_for_encoding(link, Encoding::Latin1).into_iter());
+                    data.extend(bytes_for_encoding(description, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
+                    data.extend(bytes_for_encoding(link, Encoding::Latin1));
 
                     let content = frame::ExtendedLink {
                         description: description.to_string(),
@@ -1599,8 +1599,8 @@ mod tests {
             println!("`{:?}`", encoding);
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(bytes_for_encoding(description, *encoding).into_iter());
-            data.extend(bytes_for_encoding(link, Encoding::Latin1).into_iter());
+            data.extend(bytes_for_encoding(description, *encoding));
+            data.extend(bytes_for_encoding(link, Encoding::Latin1));
             assert!(decode("WXXX", Version::Id3v23, &data[..]).is_err());
         }
     }
@@ -1622,9 +1622,9 @@ mod tests {
                     let mut data = Vec::new();
                     data.push(*encoding as u8);
                     data.extend(b"eng".iter().cloned());
-                    data.extend(bytes_for_encoding(description, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
-                    data.extend(bytes_for_encoding(text, *encoding).into_iter());
+                    data.extend(bytes_for_encoding(description, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
+                    data.extend(bytes_for_encoding(text, *encoding));
 
                     let content = frame::Lyrics {
                         lang: "eng".to_string(),
@@ -1665,8 +1665,8 @@ mod tests {
             let mut data = Vec::new();
             data.push(*encoding as u8);
             data.extend(b"eng".iter().cloned());
-            data.extend(bytes_for_encoding(description, *encoding).into_iter());
-            data.extend(bytes_for_encoding(lyrics, *encoding).into_iter());
+            data.extend(bytes_for_encoding(description, *encoding));
+            data.extend(bytes_for_encoding(lyrics, *encoding));
             assert!(decode("USLT", Version::Id3v23, &data[..]).is_err());
         }
     }
@@ -1710,10 +1710,10 @@ mod tests {
                 let mut data = Vec::new();
                 data.push(*encoding as u8);
                 for (involvement, involvee) in people_list {
-                    data.extend(bytes_for_encoding(&involvement, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
-                    data.extend(bytes_for_encoding(&involvee, *encoding).into_iter());
-                    data.extend(delim_for_encoding(*encoding).into_iter());
+                    data.extend(bytes_for_encoding(involvement, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
+                    data.extend(bytes_for_encoding(involvee, *encoding));
+                    data.extend(delim_for_encoding(*encoding));
                 }
 
                 let content = frame::InvolvedPeopleList {
@@ -1736,7 +1736,7 @@ mod tests {
                 let mut data_out = Vec::new();
                 encode(
                     &mut data_out,
-                    &&Content::InvolvedPeopleList(content),
+                    &Content::InvolvedPeopleList(content),
                     Version::Id3v23,
                     *encoding,
                 )
@@ -1755,12 +1755,12 @@ mod tests {
             println!("`{:?}`", encoding);
             let mut data = Vec::new();
             data.push(*encoding as u8);
-            data.extend(bytes_for_encoding("involvement", *encoding).into_iter());
-            data.extend(delim_for_encoding(*encoding).into_iter());
-            data.extend(bytes_for_encoding("involvee", *encoding).into_iter());
-            data.extend(delim_for_encoding(*encoding).into_iter());
-            data.extend(bytes_for_encoding("other involvement", *encoding).into_iter());
-            data.extend(delim_for_encoding(*encoding).into_iter());
+            data.extend(bytes_for_encoding("involvement", *encoding));
+            data.extend(delim_for_encoding(*encoding));
+            data.extend(bytes_for_encoding("involvee", *encoding));
+            data.extend(delim_for_encoding(*encoding));
+            data.extend(bytes_for_encoding("other involvement", *encoding));
+            data.extend(delim_for_encoding(*encoding));
             // involveee missing here
 
             let content = frame::InvolvedPeopleList {

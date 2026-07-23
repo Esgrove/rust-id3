@@ -111,14 +111,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     .iter()
                     .map(|&byte| {
                         char::from_u32(byte.into())
-                            .map(|c| String::from(c))
+                            .map(String::from)
                             .unwrap_or_else(|| format!("\\x{:02X}", byte))
                     })
                     .collect::<String>();
                 println!("{id}:{owner_identifier}=b\"{value}\"");
             }
             Content::InvolvedPeopleList(InvolvedPeopleList { items }) => {
-                if items.len() == 0 {
+                if items.is_empty() {
                     println!("{id}=<empty>");
                 } else {
                     for InvolvedPeopleListItem {
