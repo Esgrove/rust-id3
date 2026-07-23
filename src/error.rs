@@ -33,7 +33,7 @@ pub fn partial_tag_ok(rs: Result<Tag>) -> Result<Tag> {
     }
 }
 
-/// Takes a tag result and maps the NoTag kind to None. Any other error is returned as Err.
+/// Takes a tag result and maps the `NoTag` kind to None. Any other error is returned as Err.
 ///
 /// # Example
 /// ```
@@ -67,7 +67,7 @@ pub fn no_tag_ok(rs: Result<Tag>) -> Result<Option<Tag>> {
 /// Kinds of errors that may occur while performing metadata operations.
 #[derive(Debug, thiserror::Error)]
 pub enum ErrorKind {
-    /// An error kind indicating that an IO error has occurred. Contains the original io::Error.
+    /// An error kind indicating that an IO error has occurred. Contains the original `io::Error`.
     #[error("IO: {0}")]
     Io(io::Error),
     /// An error kind indicating that a string decoding error has occurred. Contains the invalid
@@ -82,7 +82,7 @@ pub enum ErrorKind {
     Parsing,
     /// An error kind indicating that a specific frame failed to parse.
     #[error("{0}")]
-    FrameParsing(FrameError),
+    FrameParsing(Box<FrameError>),
     /// An error kind indicating that some input to a function was invalid.
     #[error("InvalidInput")]
     InvalidInput,
@@ -97,7 +97,7 @@ pub enum ErrorKind {
 pub struct FrameError {
     /// The frame ID (e.g. "UFID", "GEOB", "APIC").
     pub frame_id: String,
-    /// The field within the frame that failed to parse (e.g. "owner_identifier", "mime_type").
+    /// The field within the frame that failed to parse (e.g. "`owner_identifier`", "`mime_type`").
     pub field: String,
     /// The specific kind of frame parsing failure.
     pub kind: FrameErrorKind,
@@ -138,8 +138,8 @@ pub struct Error {
 
 impl Error {
     /// Creates a new `Error` using the error kind and description.
-    pub fn new(kind: ErrorKind, description: impl Into<String>) -> Error {
-        Error {
+    pub fn new(kind: ErrorKind, description: impl Into<String>) -> Self {
+        Self {
             kind,
             description: description.into(),
             partial_tag: None,
@@ -149,18 +149,19 @@ impl Error {
     /// Creates a new `Error` from a [`FrameError`].
     ///
     /// The description is automatically derived from the structured error.
-    pub fn frame_parsing(error: FrameError) -> Error {
+    #[must_use]
+    pub fn frame_parsing(error: FrameError) -> Self {
         let description = error.to_string();
-        Error {
-            kind: ErrorKind::FrameParsing(error),
+        Self {
+            kind: ErrorKind::FrameParsing(Box::new(error)),
             description,
             partial_tag: None,
         }
     }
 
     /// Creates a new `Error` using the error kind and description.
-    pub(crate) fn with_tag(self, tag: Tag) -> Error {
-        Error {
+    pub(crate) fn with_tag(self, tag: Tag) -> Self {
+        Self {
             partial_tag: Some(tag),
             ..self
         }
@@ -177,18 +178,18 @@ impl error::Error for Error {
 }
 
 impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error {
+    fn from(err: io::Error) -> Self {
+        Self {
             kind: ErrorKind::Io(err),
-            description: "".to_string(),
+            description: String::new(),
             partial_tag: None,
         }
     }
 }
 
 impl From<string::FromUtf8Error> for Error {
-    fn from(err: string::FromUtf8Error) -> Error {
-        Error {
+    fn from(err: string::FromUtf8Error) -> Self {
+        Self {
             kind: ErrorKind::StringDecoding(err.into_bytes()),
             description: "data is not valid utf-8".to_string(),
             partial_tag: None,

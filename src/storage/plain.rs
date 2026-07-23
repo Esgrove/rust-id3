@@ -19,8 +19,8 @@ pub struct PlainStorage<F: StorageFile> {
 
 impl<F: StorageFile> PlainStorage<F> {
     /// Creates a new storage.
-    pub fn new(file: F, region: ops::Range<u64>) -> PlainStorage<F> {
-        PlainStorage { file, region }
+    pub const fn new(file: F, region: ops::Range<u64>) -> Self {
+        Self { file, region }
     }
 }
 
@@ -106,7 +106,7 @@ impl<F: StorageFile> io::Write for PlainWriter<'_, F> {
         }
 
         let buf_len = self.buffer.get_ref().len() as u64;
-        fn range_len(r: &ops::Range<u64>) -> u64 {
+        const fn range_len(r: &ops::Range<u64>) -> u64 {
             r.end - r.start
         }
 
@@ -210,8 +210,15 @@ mod tests {
             .chain(std::iter::repeat_n(0xff, 128))
             .collect();
         let mut store = PlainStorage::new(io::Cursor::new(buf), 128..256);
-        assert_eq!(128, store.reader().unwrap().bytes().count());
-        assert!(store.reader().unwrap().bytes().all(|b| b.unwrap() == 0x00));
+        assert_eq!(
+            128,
+            io::BufReader::new(store.reader().unwrap()).bytes().count()
+        );
+        assert!(
+            io::BufReader::new(store.reader().unwrap())
+                .bytes()
+                .all(|b| b.unwrap() == 0x00)
+        );
     }
 
     #[test]
@@ -254,19 +261,18 @@ mod tests {
             &buf_reference[64..128],
             &store.file.get_ref()[store.region.end as usize..]
         );
-        assert_eq!(32, store.reader().unwrap().bytes().count());
+        assert_eq!(
+            32,
+            io::BufReader::new(store.reader().unwrap()).bytes().count()
+        );
         assert!(
-            store
-                .reader()
-                .unwrap()
+            io::BufReader::new(store.reader().unwrap())
                 .bytes()
                 .take(32)
                 .all(|b| b.unwrap() == 0xff)
         );
         assert!(
-            store
-                .reader()
-                .unwrap()
+            io::BufReader::new(store.reader().unwrap())
                 .bytes()
                 .skip(32)
                 .all(|b| b.unwrap() == 0x00)
@@ -293,8 +299,15 @@ mod tests {
             &buf_reference[64..128],
             &store.file.get_ref()[store.region.end as usize..]
         );
-        assert_eq!(64, store.reader().unwrap().bytes().count());
-        assert!(store.reader().unwrap().bytes().all(|b| b.unwrap() == 0xff));
+        assert_eq!(
+            64,
+            io::BufReader::new(store.reader().unwrap()).bytes().count()
+        );
+        assert!(
+            io::BufReader::new(store.reader().unwrap())
+                .bytes()
+                .all(|b| b.unwrap() == 0xff)
+        );
     }
 
     #[test]
@@ -309,21 +322,26 @@ mod tests {
         }
         assert_eq!(2_000..42_000, store.region);
         assert_eq!(60_000, store.file.get_ref().len());
-        assert!(buf_reference[..2_000] == store.file.get_ref()[..store.region.start as usize]);
-        assert!(buf_reference[22_000..] == store.file.get_ref()[store.region.end as usize..]);
-        assert_eq!(40_000, store.reader().unwrap().bytes().count());
+        assert_eq!(
+            buf_reference[..2_000],
+            store.file.get_ref()[..store.region.start as usize]
+        );
+        assert_eq!(
+            buf_reference[22_000..],
+            store.file.get_ref()[store.region.end as usize..]
+        );
+        assert_eq!(
+            40_000,
+            io::BufReader::new(store.reader().unwrap()).bytes().count()
+        );
         assert!(
-            store
-                .reader()
-                .unwrap()
+            io::BufReader::new(store.reader().unwrap())
                 .bytes()
                 .take(40_000)
                 .all(|b| b.unwrap() == 0xff)
         );
         assert!(
-            store
-                .reader()
-                .unwrap()
+            io::BufReader::new(store.reader().unwrap())
                 .bytes()
                 .skip(40_000)
                 .all(|b| b.unwrap() == 0x00)
@@ -341,8 +359,15 @@ mod tests {
         }
         assert_eq!(32..64, store.region);
         assert_eq!(96, store.file.get_ref().len());
-        assert_eq!(32, store.reader().unwrap().bytes().count());
-        assert!(store.reader().unwrap().bytes().all(|b| b.unwrap() == 0xff));
+        assert_eq!(
+            32,
+            io::BufReader::new(store.reader().unwrap()).bytes().count()
+        );
+        assert!(
+            io::BufReader::new(store.reader().unwrap())
+                .bytes()
+                .all(|b| b.unwrap() == 0xff)
+        );
     }
 
     #[test]
@@ -357,20 +382,22 @@ mod tests {
         }
         assert_eq!(2_000..11_000, store.region);
         assert_eq!(29_000, store.file.get_ref().len());
-        assert!(buf_reference[22_000..] == store.file.get_ref()[store.region.end as usize..]);
-        assert_eq!(9_000, store.reader().unwrap().bytes().count());
+        assert_eq!(
+            buf_reference[22_000..],
+            store.file.get_ref()[store.region.end as usize..]
+        );
+        assert_eq!(
+            9_000,
+            io::BufReader::new(store.reader().unwrap()).bytes().count()
+        );
         assert!(
-            store
-                .reader()
-                .unwrap()
+            io::BufReader::new(store.reader().unwrap())
                 .bytes()
                 .take(9_000)
                 .all(|b| b.unwrap() == 0xff)
         );
         assert!(
-            store
-                .reader()
-                .unwrap()
+            io::BufReader::new(store.reader().unwrap())
                 .bytes()
                 .skip(9_000)
                 .all(|b| b.unwrap() == 0x00)

@@ -195,8 +195,9 @@ pub struct Tag {
 
 impl Tag {
     /// Creates a new empty ID3v1 tag.
-    pub fn new() -> Tag {
-        Tag::default()
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Checks whether the reader contains an ID3v1 tag.
@@ -212,7 +213,7 @@ impl Tag {
     }
 
     /// Seeks to and reads a ID3v1 tag from the reader.
-    pub fn read_from(mut reader: impl io::Read + io::Seek) -> crate::Result<Tag> {
+    pub fn read_from(mut reader: impl io::Read + io::Seek) -> crate::Result<Self> {
         let mut tag_buf = [0; 355];
         let file_len = reader.seek(io::SeekFrom::End(0))?;
         if file_len >= XTAG_CHUNK.start.unsigned_abs() {
@@ -280,7 +281,7 @@ impl Tag {
             (None, None, None, None)
         };
 
-        Ok(Tag {
+        Ok(Self {
             title,
             artist,
             album,
@@ -296,9 +297,9 @@ impl Tag {
     }
 
     /// Attempts to read an ID3v1 tag from the file at the indicated path.
-    pub fn read_from_path(path: impl AsRef<Path>) -> crate::Result<Tag> {
+    pub fn read_from_path(path: impl AsRef<Path>) -> crate::Result<Self> {
         let file = fs::File::open(path)?;
-        Tag::read_from(file)
+        Self::read_from(file)
     }
 
     /// Removes an ID3v1 tag plus possible extended data if any.
@@ -358,17 +359,18 @@ impl Tag {
     /// Returns true if the file initially contained a tag.
     pub fn remove_from_path(path: impl AsRef<Path>) -> crate::Result<bool> {
         let mut file = fs::OpenOptions::new().read(true).write(true).open(path)?;
-        Tag::remove_from_file(&mut file)
+        Self::remove_from_file(&mut file)
     }
 
     /// Returns `genre_str`, falling back to translating `genre_id` to a string.
+    #[must_use]
     pub fn genre(&self) -> Option<&str> {
-        if let Some(ref g) = self.genre_str {
-            if !g.is_empty() {
-                return Some(g.as_str());
-            }
+        if let Some(ref g) = self.genre_str
+            && !g.is_empty()
+        {
+            return Some(g.as_str());
         }
-        GENRE_LIST.get(self.genre_id as usize).cloned()
+        GENRE_LIST.get(self.genre_id as usize).copied()
     }
 }
 

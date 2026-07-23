@@ -240,9 +240,9 @@ impl ChunkHeader {
     ///
     /// | Field   | Size | Type            |
     /// |---------+------+-----------------|
-    /// | tag     |    4 | ChunkTag        |
+    /// | tag     |    4 | `ChunkTag`        |
     /// | size    |    4 | 32 bits integer |
-    /// | format  |    4 | ChunkTag        |
+    /// | format  |    4 | `ChunkTag`        |
     pub fn read_root_chunk_header<F, R>(mut reader: R) -> crate::Result<Self>
     where
         F: ChunkFormat,
@@ -271,10 +271,10 @@ impl ChunkHeader {
             .try_into()
             .expect("slice with incorrect length");
 
-        if let Some(format_tag) = F::ROOT_FORMAT {
-            if chunk_format != format_tag {
-                return Err(invalid_header_error);
-            }
+        if let Some(format_tag) = F::ROOT_FORMAT
+            && chunk_format != format_tag
+        {
+            return Err(invalid_header_error);
         }
 
         Ok(Self { tag, size })
@@ -351,7 +351,7 @@ impl ChunkHeader {
             // Skip the chunk's contents, and padding if any.
             let skip = chunk.size.saturating_add(chunk.size % 2);
 
-            pos = reader.seek(SeekFrom::Current(skip as i64))?;
+            pos = reader.seek(SeekFrom::Current(i64::from(skip)))?;
         }
 
         Ok(None)

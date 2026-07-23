@@ -12,7 +12,7 @@ impl<'a> Parser<'a> {
         let mut parser = Parser(s);
         let v1_genre_ids = match parser.one_or_more(&Self::content_type) {
             Ok(v) => v,
-            Err(_) => return Cow::Borrowed(parser.0),
+            Err(()) => return Cow::Borrowed(parser.0),
         };
         let trailer = parser.trailer();
 
@@ -37,7 +37,7 @@ impl<'a> Parser<'a> {
                 p.parse_number()
                     .map(|index| match GENRE_LIST.get(index as usize) {
                         Some(v1_genre) => v1_genre.to_string(),
-                        None => format!("({index})",),
+                        None => format!("({index})"),
                     })
             },
         ])?;

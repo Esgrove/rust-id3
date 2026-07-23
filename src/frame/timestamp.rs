@@ -46,15 +46,15 @@ impl fmt::Display for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:04}", self.year)?;
         if let Some(month) = self.month {
-            write!(f, "-{month:02}",)?;
+            write!(f, "-{month:02}")?;
             if let Some(day) = self.day {
-                write!(f, "-{day:02}",)?;
+                write!(f, "-{day:02}")?;
                 if let Some(hour) = self.hour {
-                    write!(f, "T{hour:02}",)?;
+                    write!(f, "T{hour:02}")?;
                     if let Some(minute) = self.minute {
-                        write!(f, ":{minute:02}",)?;
+                        write!(f, ":{minute:02}")?;
                         if let Some(second) = self.second {
-                            write!(f, ":{second:02}",)?;
+                            write!(f, ":{second:02}")?;
                         }
                     }
                 }
@@ -147,7 +147,7 @@ impl FromStr for Timestamp {
     fn from_str(source: &str) -> Result<Self, Self::Err> {
         Parser(source)
             .parse_timestamp(source)
-            .map_err(|_| ParseError::Unmatched)
+            .map_err(|()| ParseError::Unmatched)
     }
 }
 
@@ -160,13 +160,13 @@ pub enum ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ParseError::Unmatched => write!(f, "No valid timestamp was found in the input"),
+            Self::Unmatched => write!(f, "No valid timestamp was found in the input"),
         }
     }
 }
 
 impl error::Error for ParseError {
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Timestamp parse error"
     }
 

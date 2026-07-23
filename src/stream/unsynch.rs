@@ -14,7 +14,7 @@ pub fn encode_u32(n: u32) -> u32 {
 }
 
 /// Returns the unsynchsafe varaiant of a `u32` value.
-pub fn decode_u32(n: u32) -> u32 {
+pub const fn decode_u32(n: u32) -> u32 {
     n & 0xFF | ((n & 0xFF00) >> 1) | ((n & 0xFF_0000) >> 2) | ((n & 0xFF00_0000) >> 3)
 }
 
@@ -36,8 +36,8 @@ impl<R> Reader<R>
 where
     R: io::Read,
 {
-    pub fn new(reader: R) -> Reader<R> {
-        Reader {
+    pub const fn new(reader: R) -> Self {
+        Self {
             reader,
             buf: [0; 8192],
             next: 0,

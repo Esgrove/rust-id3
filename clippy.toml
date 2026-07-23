@@ -1,1 +1,2 @@
 doc-valid-idents = ["ID3v1", "ID3v2"]
+allow-unwrap-in-tests = true

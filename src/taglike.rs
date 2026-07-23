@@ -6,7 +6,7 @@ use crate::frame::{
 use std::borrow::Cow;
 use std::mem::swap;
 
-/// TagLike is a trait that provides a set of useful default methods that make manipulation of tag
+/// `TagLike` is a trait that provides a set of useful default methods that make manipulation of tag
 /// frames easier.
 pub trait TagLike: private::Sealed {
     #[doc(hidden)]
@@ -811,7 +811,7 @@ pub trait TagLike: private::Sealed {
     fn set_total_discs(&mut self, total_discs: u32) {
         let text = match self.text_pair("TPOS") {
             Some((disc, _)) => format!("{disc}/{total_discs}"),
-            None => format!("1/{total_discs}",),
+            None => format!("1/{total_discs}"),
         };
         self.set_text("TPOS", text);
     }
@@ -1012,8 +1012,8 @@ pub trait TagLike: private::Sealed {
             if frame.id() == "TXXX" {
                 match *frame.content() {
                     Content::ExtendedText(ref ext) => {
-                        let descr_match = description.map(|v| v == ext.description).unwrap_or(true);
-                        let value_match = value.map(|v| v == ext.value).unwrap_or(true);
+                        let descr_match = description.is_none_or(|v| v == ext.description);
+                        let value_match = value.is_none_or(|v| v == ext.value);
                         // True if we want to keep the frame.
                         !(descr_match && value_match)
                     }
@@ -1198,8 +1198,8 @@ pub trait TagLike: private::Sealed {
             if frame.id() == "COMM" {
                 match *frame.content() {
                     Content::Comment(ref com) => {
-                        let descr_match = description.map(|v| v == com.description).unwrap_or(true);
-                        let text_match = text.map(|v| v == com.text).unwrap_or(true);
+                        let descr_match = description.is_none_or(|v| v == com.description);
+                        let text_match = text.is_none_or(|v| v == com.text);
                         // True if we want to keep the frame.
                         !(descr_match && text_match)
                     }
@@ -1297,10 +1297,10 @@ pub trait TagLike: private::Sealed {
             if frame.id() == "GEOB" {
                 match *frame.content() {
                     Content::EncapsulatedObject(ref ext) => {
-                        let descr_match = description.map(|v| v == ext.description).unwrap_or(true);
-                        let mime_match = mime_type.map(|v| v == ext.mime_type).unwrap_or(true);
-                        let filename_match = filename.map(|v| v == ext.filename).unwrap_or(true);
-                        let data_match = data.map(|v| v == ext.data).unwrap_or(true);
+                        let descr_match = description.is_none_or(|v| v == ext.description);
+                        let mime_match = mime_type.is_none_or(|v| v == ext.mime_type);
+                        let filename_match = filename.is_none_or(|v| v == ext.filename);
+                        let data_match = data.is_none_or(|v| v == ext.data);
                         // True if we want to keep the frame.
                         !(descr_match && mime_match && filename_match && data_match)
                     }
@@ -1468,7 +1468,7 @@ pub trait TagLike: private::Sealed {
         self.remove("CTOC");
     }
 
-    /// Removes all Unique File Identifiers with the specified owner_identifier.
+    /// Removes all Unique File Identifiers with the specified `owner_identifier`.
     ///
     /// # Example
     /// ```
