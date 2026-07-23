@@ -38,3 +38,18 @@ enum_glob_use = "deny"
 unwrap_used = "deny"
 nursery = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
+# Casting between integer widths is inherent to parsing/encoding a binary format
+cast_possible_truncation = "allow"
+cast_possible_wrap = "allow"
+cast_sign_loss = "allow"
+# The frame validate/decode/encode matches enumerate each (id, content) pairing explicitly
+# to mirror the wire format.
+# Collapsing arms with identical bodies would hide that structure.
+match_same_arms = "allow"
+# The parser and encoder have a few inherently long, linear functions.
+# Splitting them up for the line count alone would hurt readability more than it helps.
+too_many_lines = "allow"
+# Nearly every public function returns the crate `Result`
+# and fails on the same parsing/IO conditions.
+# Adding an `# Errors` section to each would be repetitive boilerplate.
+missing_errors_doc = "allow"

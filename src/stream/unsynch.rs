@@ -25,7 +25,7 @@ pub struct Reader<R>
 where
     R: io::Read,
 {
-    reader: R,
+    inner: R,
     buf: [u8; 8192],
     next: usize,
     available: usize,
@@ -38,7 +38,7 @@ where
 {
     pub const fn new(reader: R) -> Self {
         Self {
-            reader,
+            inner: reader,
             buf: [0; 8192],
             next: 0,
             available: 0,
@@ -57,7 +57,7 @@ where
         while i < buf.len() {
             assert!(self.next <= self.available);
             if self.next == self.available {
-                self.available = self.reader.read(&mut self.buf)?;
+                self.available = self.inner.read(&mut self.buf)?;
                 self.next = 0;
                 if self.available == 0 {
                     break;
@@ -115,8 +115,8 @@ mod tests {
         for i in 0..1 << 26 {
             assert_eq!(i, decode_u32(encode_u32(i)));
         }
-        assert_eq!(0x7f7f7f7f, encode_u32(0x0fff_ffff));
-        assert_eq!(0x0fff_ffff, decode_u32(0x7f7f7f7f));
+        assert_eq!(0x7f7f_7f7f, encode_u32(0x0fff_ffff));
+        assert_eq!(0x0fff_ffff, decode_u32(0x7f7f_7f7f));
     }
 
     #[test]

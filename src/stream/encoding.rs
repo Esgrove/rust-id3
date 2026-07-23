@@ -1,5 +1,4 @@
 use crate::{Error, ErrorKind};
-use std::convert::TryInto;
 
 /// Types of text encodings used in ID3 frames.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -15,7 +14,7 @@ pub enum Encoding {
 }
 
 impl Encoding {
-    pub(crate) fn decode(&self, bytes: impl AsRef<[u8]>) -> crate::Result<String> {
+    pub(crate) fn decode(self, bytes: impl AsRef<[u8]>) -> crate::Result<String> {
         let bytes = bytes.as_ref();
         if bytes.is_empty() {
             // UTF16 decoding requires at least 2 bytes for it not to error.
@@ -29,7 +28,7 @@ impl Encoding {
         }
     }
 
-    pub(crate) fn encode<'a>(&self, string: impl AsRef<str> + 'a) -> Vec<u8> {
+    pub(crate) fn encode<'a>(self, string: impl AsRef<str> + 'a) -> Vec<u8> {
         let string = string.as_ref();
         match self {
             Self::Latin1 => string_to_latin1(string),
@@ -64,8 +63,7 @@ fn string_from_utf16(data: &[u8]) -> crate::Result<String> {
 fn string_from_utf16le(data: &[u8]) -> crate::Result<String> {
     let mut data2 = Vec::with_capacity(data.len() / 2);
     for chunk in data.chunks_exact(2) {
-        let bytes = chunk.try_into().unwrap();
-        data2.push(u16::from_le_bytes(bytes));
+        data2.push(u16::from_le_bytes([chunk[0], chunk[1]]));
     }
     String::from_utf16(&data2).map_err(|_| {
         Error::new(
@@ -78,8 +76,7 @@ fn string_from_utf16le(data: &[u8]) -> crate::Result<String> {
 fn string_from_utf16be(data: &[u8]) -> crate::Result<String> {
     let mut data2 = Vec::with_capacity(data.len() / 2);
     for chunk in data.chunks_exact(2) {
-        let bytes = chunk.try_into().unwrap();
-        data2.push(u16::from_be_bytes(bytes));
+        data2.push(u16::from_be_bytes([chunk[0], chunk[1]]));
     }
     String::from_utf16(&data2).map_err(|_| {
         Error::new(
@@ -136,8 +133,11 @@ mod tests {
     fn test_strings() {
         let text: &str = "śốмễ śŧŗỉňĝ";
 
+        // UTF-8 encoding is verbatim and decoding does not strip a trailing null terminator.
         let mut utf8 = text.as_bytes().to_vec();
         utf8.push(0);
+        assert_eq!(&Encoding::UTF8.encode(text)[..], text.as_bytes());
+        assert_eq!(Encoding::UTF8.decode(&utf8).unwrap(), format!("{text}\0"));
 
         // should use little endian BOM
         assert_eq!(&string_to_utf16(text)[..], b"\xFF\xFE\x5B\x01\xD1\x1E\x3C\x04\xC5\x1E\x20\x00\x5B\x01\x67\x01\x57\x01\xC9\x1E\x48\x01\x1D\x01");

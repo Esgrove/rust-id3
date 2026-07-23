@@ -471,8 +471,7 @@ impl<'a> Decoder<'a> {
 
     fn uint16(&mut self) -> crate::Result<u16> {
         let b = self.bytes(2)?;
-        let a = b.try_into().unwrap();
-        Ok(u16::from_be_bytes(a))
+        Ok(u16::from_be_bytes([b[0], b[1]]))
     }
 
     fn uint24(&mut self) -> crate::Result<u32> {
@@ -484,11 +483,10 @@ impl<'a> Decoder<'a> {
 
     fn uint32(&mut self) -> crate::Result<u32> {
         let b = self.bytes(4)?;
-        let a = b.try_into().unwrap();
-        Ok(u32::from_be_bytes(a))
+        Ok(u32::from_be_bytes([b[0], b[1], b[2], b[3]]))
     }
 
-    fn string_until_eof(&mut self, encoding: Encoding) -> crate::Result<String> {
+    fn string_until_eof(&self, encoding: Encoding) -> crate::Result<String> {
         encoding.decode(self.r)
     }
 
@@ -545,14 +543,13 @@ impl<'a> Decoder<'a> {
     fn text_content(mut self) -> crate::Result<Content> {
         let encoding = self.encoding()?;
         let (end, _) = match self.version {
-            Version::Id3v24 => match find_closing_delim(encoding, self.r) {
-                Some(i) => (i, i + delim_len(encoding)),
-                None => (self.r.len(), self.r.len()),
-            },
-            _ => match find_delim(encoding, self.r, 0) {
-                Some(i) => (i, i + delim_len(encoding)),
-                None => (self.r.len(), self.r.len()),
-            },
+            Version::Id3v24 => find_closing_delim(encoding, self.r)
+                .map_or((self.r.len(), self.r.len()), |i| {
+                    (i, i + delim_len(encoding))
+                }),
+            _ => find_delim(encoding, self.r, 0).map_or((self.r.len(), self.r.len()), |i| {
+                (i, i + delim_len(encoding))
+            }),
         };
         let text = encoding.decode(self.bytes(end)?)?;
         Ok(Content::Text(text))
@@ -576,7 +573,7 @@ impl<'a> Decoder<'a> {
         let encoding = self.encoding()?;
         let end = match self.version {
             Version::Id3v23 | Version::Id3v24 => find_closing_delim(encoding, self.r),
-            _ => find_delim(encoding, self.r, 0),
+            Version::Id3v22 => find_delim(encoding, self.r, 0),
         }
         .unwrap_or(self.r.len());
 
@@ -1307,7 +1304,7 @@ mod tests {
             Content::Popularimeter(Popularimeter {
                 user: String::new(),
                 rating: 255,
-                counter: 0xaaaaaa,
+                counter: 0x00aa_aaaa,
             })
         );
 
@@ -1318,7 +1315,7 @@ mod tests {
             Content::Popularimeter(Popularimeter {
                 user: String::new(),
                 rating: 255,
-                counter: 0xaaaaaaaaaaaaaaaa,
+                counter: 0xaaaa_aaaa_aaaa_aaaa,
             })
         );
     }

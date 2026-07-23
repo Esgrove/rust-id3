@@ -248,9 +248,9 @@ impl ChunkHeader {
         F: ChunkFormat,
         R: io::Read,
     {
-        let invalid_header_error = Error::new(ErrorKind::InvalidInput, "invalid chunk header");
-
         const BUFFER_SIZE: usize = (CHUNK_HEADER_LEN + TAG_LEN) as usize;
+
+        let invalid_header_error = Error::new(ErrorKind::InvalidInput, "invalid chunk header");
 
         let mut buffer = [0; BUFFER_SIZE];
 
@@ -321,7 +321,7 @@ impl ChunkHeader {
         F: ChunkFormat,
         R: io::Read + io::Seek,
     {
-        Self::find::<F, _>(&ID3_TAG, reader, end)?
+        Self::find::<F, _>(ID3_TAG, reader, end)?
             .ok_or_else(|| Error::new(ErrorKind::NoTag, "No tag chunk found!"))
     }
 
@@ -334,7 +334,7 @@ impl ChunkHeader {
     ///   chunks.
     /// * `end`: The stream position where the chunk sequence ends. This is used to prevent
     ///   searching past the end.
-    fn find<F, R>(tag: &ChunkTag, mut reader: R, end: u64) -> crate::Result<Option<Self>>
+    fn find<F, R>(tag: ChunkTag, mut reader: R, end: u64) -> crate::Result<Option<Self>>
     where
         F: ChunkFormat,
         R: io::Read + io::Seek,
@@ -344,7 +344,7 @@ impl ChunkHeader {
         while pos < end {
             let chunk = Self::read::<F, _>(&mut reader)?;
 
-            if &chunk.tag == tag {
+            if chunk.tag == tag {
                 return Ok(Some(chunk));
             }
 
@@ -363,7 +363,7 @@ impl ChunkHeader {
     /// |-------+------+-------------------------------|
     /// | tag   |    4 | chunk type                    |
     /// | size  |    4 | 32 bits little endian integer |
-    pub fn write_to<F, W>(&self, mut writer: W) -> io::Result<()>
+    pub fn write_to<F, W>(self, mut writer: W) -> io::Result<()>
     where
         F: ChunkFormat,
         W: io::Write,
@@ -430,7 +430,7 @@ mod tests {
 
         // Find the TEST chunk
         let length = cursor.get_ref().len() as u64;
-        let result = ChunkHeader::find::<MockFormat, _>(&ChunkTag(*b"TEST"), &mut cursor, length);
+        let result = ChunkHeader::find::<MockFormat, _>(ChunkTag(*b"TEST"), &mut cursor, length);
 
         // Verify the result
         assert!(result.is_ok());

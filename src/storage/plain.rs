@@ -100,16 +100,16 @@ impl<F: StorageFile> io::Write for PlainWriter<'_, F> {
     }
 
     fn flush(&mut self) -> io::Result<()> {
+        const fn range_len(r: &ops::Range<u64>) -> u64 {
+            r.end - r.start
+        }
+
         // Check whether the buffer and file are out of sync.
         if !self.buffer_changed {
             return Ok(());
         }
 
         let buf_len = self.buffer.get_ref().len() as u64;
-        const fn range_len(r: &ops::Range<u64>) -> u64 {
-            r.end - r.start
-        }
-
         match buf_len.cmp(&range_len(&self.storage.region)) {
             Ordering::Greater => {
                 // The region is not able to store the contents of the buffer. Grow it by moving the
@@ -120,7 +120,7 @@ impl<F: StorageFile> io::Write for PlainWriter<'_, F> {
                 let new_region_end = self.storage.region.start + buf_len;
 
                 self.storage.file.set_len(new_file_end)?;
-                let mut rwbuf = [0; COPY_BUF_SIZE];
+                let mut rwbuf = vec![0; COPY_BUF_SIZE];
                 let rwbuf_len = rwbuf.len();
                 for i in 1.. {
                     let raw_from = old_file_end as i64 - i as i64 * rwbuf.len() as i64;
@@ -150,7 +150,7 @@ impl<F: StorageFile> io::Write for PlainWriter<'_, F> {
                 let new_file_end =
                     self.storage.region.start + buf_len + (old_file_end - old_region_end);
 
-                let mut rwbuf = [0; COPY_BUF_SIZE];
+                let mut rwbuf = vec![0; COPY_BUF_SIZE];
                 let rwbuf_len = rwbuf.len();
                 for i in 0.. {
                     let from = old_region_end + i * rwbuf.len() as u64;
@@ -317,7 +317,8 @@ mod tests {
         let mut store = PlainStorage::new(io::Cursor::new(buf), 2_000..22_000);
         {
             let mut w = store.writer().unwrap();
-            w.write_all(&[0xff; 40_000]).unwrap();
+            let data = vec![0xff; 40_000];
+            w.write_all(&data).unwrap();
             w.flush().unwrap();
         }
         assert_eq!(2_000..42_000, store.region);

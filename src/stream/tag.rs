@@ -60,16 +60,15 @@ struct Header {
 }
 
 impl Header {
-    const fn size(&self) -> u64 {
-        10 // Raw header.
-    }
+    /// Size of the raw header in bytes.
+    const SIZE: u64 = 10;
 
     fn frame_bytes(&self) -> u64 {
         u64::from(self.tag_size).saturating_sub(u64::from(self.ext_header_size))
     }
 
     fn tag_size(&self) -> u64 {
-        self.size() + self.frame_bytes()
+        Self::SIZE + self.frame_bytes()
     }
 }
 
@@ -112,7 +111,7 @@ impl Header {
     #[cfg(feature = "tokio")]
     async fn async_decode(
         mut reader: impl tokio::io::AsyncRead + std::marker::Unpin,
-    ) -> crate::Result<Header> {
+    ) -> crate::Result<Self> {
         use tokio::io::AsyncReadExt;
 
         let mut header = [0; 10];
@@ -137,7 +136,7 @@ impl Header {
             let ext_remaining_size = ext_size - ext_header.len() as u32;
             let mut ext_header = Vec::with_capacity(cmp::min(ext_remaining_size as usize, 0xffff));
             reader
-                .take(ext_remaining_size as u64)
+                .take(u64::from(ext_remaining_size))
                 .read_to_end(&mut ext_header)
                 .await?;
 
@@ -199,7 +198,7 @@ impl Header {
 pub fn decode(mut reader: impl io::Read) -> crate::Result<Tag> {
     let header = Header::decode(&mut reader)?;
 
-    decode_remaining(reader, header)
+    decode_remaining(reader, &header)
 }
 
 #[cfg(feature = "tokio")]
@@ -220,10 +219,10 @@ pub async fn async_decode(
         std::io::Cursor::new(buf)
     };
 
-    decode_remaining(reader, header)
+    decode_remaining(reader, &header)
 }
 
-fn decode_remaining(mut reader: impl io::Read, header: Header) -> crate::Result<Tag> {
+fn decode_remaining(mut reader: impl io::Read, header: &Header) -> crate::Result<Tag> {
     match header.version {
         Version::Id3v22 => {
             // Limit the reader only to the given tag_size, don't return any more bytes after that.
@@ -251,9 +250,8 @@ fn decode_remaining(mut reader: impl io::Read, header: Header) -> crate::Result<
                     Ok(v) => v,
                     Err(err) => return Err(err.with_tag(tag)),
                 };
-                let (bytes_read, frame) = match v {
-                    Some(v) => v,
-                    None => break, // Padding.
+                let Some((bytes_read, frame)) = v else {
+                    break; // Padding.
                 };
                 tag.add_frame(frame);
                 offset += bytes_read as u64;
@@ -269,9 +267,8 @@ fn decode_remaining(mut reader: impl io::Read, header: Header) -> crate::Result<
                     Ok(v) => v,
                     Err(err) => return Err(err.with_tag(tag)),
                 };
-                let (bytes_read, frame) = match v {
-                    Some(v) => v,
-                    None => break, // Padding.
+                let Some((bytes_read, frame)) = v else {
+                    break; // Padding.
                 };
                 tag.add_frame(frame);
                 offset += bytes_read as u64;
@@ -1015,28 +1012,28 @@ mod tests {
     fn test_locate_id3v22() {
         let file = fs::File::open("testdata/id3v22.id3").unwrap();
         let location = locate_id3v2(file).unwrap();
-        assert_eq!(0..0x0000c3ea, location);
+        assert_eq!(0..0x0000_c3ea, location);
     }
 
     #[test]
     fn test_locate_id3v23() {
         let file = fs::File::open("testdata/id3v23.id3").unwrap();
         let location = locate_id3v2(file).unwrap();
-        assert_eq!(0..0x00006c0a, location);
+        assert_eq!(0..0x0000_6c0a, location);
     }
 
     #[test]
     fn test_locate_id3v24() {
         let file = fs::File::open("testdata/id3v24.id3").unwrap();
         let location = locate_id3v2(file).unwrap();
-        assert_eq!(0..0x00006c0a, location);
+        assert_eq!(0..0x0000_6c0a, location);
     }
 
     #[test]
     fn test_locate_id3v24_ext() {
         let file = fs::File::open("testdata/id3v24_ext.id3").unwrap();
         let location = locate_id3v2(file).unwrap();
-        assert_eq!(0..0x0000018d, location);
+        assert_eq!(0..0x0000_018d, location);
     }
 
     #[test]

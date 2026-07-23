@@ -10,9 +10,8 @@ type ParseFunc<P, T> = dyn Fn(&mut P) -> Result<T, ()>;
 impl<'a> Parser<'a> {
     pub fn parse_tcon(s: &'a str) -> Cow<'a, str> {
         let mut parser = Parser(s);
-        let v1_genre_ids = match parser.one_or_more(&Self::content_type) {
-            Ok(v) => v,
-            Err(()) => return Cow::Borrowed(parser.0),
+        let Ok(v1_genre_ids) = parser.one_or_more(&Self::content_type) else {
+            return Cow::Borrowed(parser.0);
         };
         let trailer = parser.trailer();
 
@@ -34,11 +33,11 @@ impl<'a> Parser<'a> {
             &|p: &mut Self| p.expect("RX").map(|_| "Remix".to_string()),
             &|p: &mut Self| p.expect("CR").map(|_| "Cover".to_string()),
             &|p: &mut Self| {
-                p.parse_number()
-                    .map(|index| match GENRE_LIST.get(index as usize) {
-                        Some(v1_genre) => v1_genre.to_string(),
-                        None => format!("({index})"),
-                    })
+                p.parse_number().map(|index| {
+                    GENRE_LIST
+                        .get(index as usize)
+                        .map_or_else(|| format!("({index})"), ToString::to_string)
+                })
             },
         ])?;
         self.expect(")")?;
