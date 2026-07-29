@@ -1,3 +1,9 @@
+## v1.17.1 (2026-07-29)
+
+### Fix
+
+- decode content size underflow
+
 ## v1.17.0 (2026-05-27)
 
 ### Feat
