@@ -62,7 +62,7 @@ fn string_from_utf16(data: &[u8]) -> crate::Result<String> {
 
 fn string_from_utf16le(data: &[u8]) -> crate::Result<String> {
     let mut data2 = Vec::with_capacity(data.len() / 2);
-    for chunk in data.chunks_exact(2) {
+    for chunk in data.as_chunks::<2>().0 {
         data2.push(u16::from_le_bytes([chunk[0], chunk[1]]));
     }
     String::from_utf16(&data2).map_err(|_| {
@@ -75,7 +75,7 @@ fn string_from_utf16le(data: &[u8]) -> crate::Result<String> {
 
 fn string_from_utf16be(data: &[u8]) -> crate::Result<String> {
     let mut data2 = Vec::with_capacity(data.len() / 2);
-    for chunk in data.chunks_exact(2) {
+    for chunk in data.as_chunks::<2>().0 {
         data2.push(u16::from_be_bytes([chunk[0], chunk[1]]));
     }
     String::from_utf16(&data2).map_err(|_| {

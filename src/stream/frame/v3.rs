@@ -118,7 +118,7 @@ mod tests {
         let flags = Flags::empty();
         let mut writer = Cursor::new(Vec::new());
 
-        let result = encode(&mut writer, &frame, flags);
+        let result = encode(&mut writer, &frame, &flags);
 
         assert!(result.is_err());
         if let Err(e) = result {
