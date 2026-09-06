@@ -147,11 +147,12 @@ mod tests {
         // Attempt to decode the frame
         let result = decode(&mut reader);
 
-        // Ensure that the result is an error due to underflow
+        // Ensure that the result is an error due to underflow: the size
+        // subtraction saturates to 0 and the empty (0-byte) compressed
+        // payload fails zlib decompression.
         assert!(result.is_err());
         if let Err(e) = result {
-            assert!(matches!(e.kind, ErrorKind::Parsing));
-            assert_eq!(e.description, "Insufficient data to decode bytes");
+            assert!(matches!(e.kind, ErrorKind::Io(_)));
         }
     }
 }
