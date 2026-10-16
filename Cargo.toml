@@ -31,3 +31,6 @@ tokio = ["dep:tokio"]
 
 ## Picture decoding takes ~20% of time. Allow disabling it if it's unneeded.
 decode_picture = []
+
+[package.metadata.docs.rs]
+all-features = true
