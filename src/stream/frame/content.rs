@@ -1026,8 +1026,6 @@ fn find_delim(encoding: Encoding, data: &[u8], index: usize) -> Option<usize> {
                 // delimiter was not found
                 return None;
             }
-
-            Some(i)
         }
         Encoding::UTF16 | Encoding::UTF16BE => {
             while i + 1 < data.len() && (data[i] != 0 || data[i + 1] != 0) {
@@ -1038,10 +1036,9 @@ fn find_delim(encoding: Encoding, data: &[u8], index: usize) -> Option<usize> {
                 // delimiter was not found
                 return None;
             }
-
-            Some(i)
         }
     }
+    Some(i)
 }
 
 /// Returns the index of the last delimiter for the specified encoding.
@@ -1060,7 +1057,6 @@ pub fn find_closing_delim(encoding: Encoding, data: &[u8]) -> Option<usize> {
                 }
                 i -= 1;
             }
-            None
         }
         Encoding::UTF16 | Encoding::UTF16BE => {
             i = i.checked_sub(2)?;
@@ -1075,9 +1071,9 @@ pub fn find_closing_delim(encoding: Encoding, data: &[u8]) -> Option<usize> {
                 }
                 i -= 2;
             }
-            None
         }
     }
+    None
 }
 
 /// Returns the delimiter length for the specified encoding.

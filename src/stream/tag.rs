@@ -775,7 +775,7 @@ mod tests {
             ctoc.elements,
             &["chp0", "chp1", "chp2", "chp3", "chp4", "chp5", "chp6"]
         );
-        assert!(ctoc.frames.is_empty());
+        assert_eq!(ctoc.frames, []);
     }
 
     #[test]
